@@ -23,6 +23,10 @@ class DashboardController extends Controller
                     return $s == 3 ? 'Summer' : (string) $s;
                 })
                 ->toArray();
+            
+            $curriculum = DB::table('curriculums')
+                ->where('display',1)
+                ->first();
 
             // 🟢 2. Basic Counts
             if ($level === 'admin' || $level === 'registrar') {
@@ -30,6 +34,7 @@ class DashboardController extends Controller
                 $counts['teachers'] = DB::table('teacher')->count();
                 $counts['class'] = DB::table('class')->count();
                 $counts['subjects'] = DB::table('subject')
+                    ->where('curriculum', $curriculum->curriculum)
                     ->whereIn('semester', $activeSemesters)
                     ->count();
             } elseif ($level === 'teacher') {
@@ -99,11 +104,11 @@ class DashboardController extends Controller
 
             $activeSemesters = DB::table('ay')->where('display', 1)->pluck('semester')->toArray();
 
-            Log::info('[studentDashboard] Returning student dashboard data', [
-                'studid' => $studid,
-                'student' => $student,
-                'activeSemesters' => $activeSemesters,
-            ]);
+            // Log::info('[studentDashboard] Returning student dashboard data', [
+            //     'studid' => $studid,
+            //     'student' => $student,
+            //     'activeSemesters' => $activeSemesters,
+            // ]);
 
             return response()->json([
                 'student' => [

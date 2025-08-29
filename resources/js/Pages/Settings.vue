@@ -20,14 +20,6 @@
             <span class="text-gray-600">Role:</span>
             <span class="font-medium text-gray-800 capitalize">{{ userLevel }}</span>
           </div>
-
-          <!-- Optional: Show class if user is student -->
-          <!--
-          <div v-if="userLevel === 'student'" class="flex flex-col md:flex-row md:justify-between">
-            <span class="text-gray-600">Class:</span>
-            <span class="font-medium text-gray-800">BSIT 2A</span>
-          </div>
-          -->
         </div>
       </div>
 
@@ -54,6 +46,7 @@
 
       <!-- Existing Admin AcademicYearList -->
       <AcademicYearList class="select-none" v-if="userLevel === 'admin'" />
+      <CurriculumList v-if="userLevel === 'admin'" />
 
     </div>
 
@@ -66,6 +59,7 @@ import axios from 'axios'
 import DashboardLayout from '@/Components/dashboard/DashboardLayout.vue'
 import AcademicYearList from '@/Components/settings/AcademicYearList.vue'
 import ChangePasswordForm from '@/Components/settings/ChangePasswordForm.vue'
+import CurriculumList from '@/Components/settings/CurriculumList.vue'
 
 const fullname = ref('')
 const userLevel = ref('')

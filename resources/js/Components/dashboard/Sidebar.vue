@@ -187,24 +187,6 @@
       </svg>
     </template>
   </SidebarLink>
-  <SidebarLink name="My Grades">
-    <template #icon >
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M5 13l4 4L19 7" />
-      </svg>
-    </template>
-  </SidebarLink>
-
-  <SidebarLink name="My Subjects" href="/subjects">
-    <template #icon>
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 20l-9-5 9-5 9 5-9 5z
-                 M12 12l-9-5 9-5 9 5-9 5z" />
-      </svg>
-    </template>
-  </SidebarLink>
 
   <SidebarLink name="Consultation" href="/consultation">
     <template #icon>

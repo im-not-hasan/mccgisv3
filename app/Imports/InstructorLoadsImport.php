@@ -39,6 +39,9 @@ class InstructorLoadsImport implements WithMultipleSheets, ToCollection
     /** Called once per registered sheet. */
     public function collection(Collection $rows)
     {
+        $curriculum = DB::table('curriculums')
+            ->where('display',1)
+            ->first();
         \Log::info('[IL] sheet start', ['rows_raw_count' => $rows->count()]);
 
         if (!$this->ay_id) {
@@ -215,6 +218,7 @@ class InstructorLoadsImport implements WithMultipleSheets, ToCollection
 
                         // Subject lookup ignoring spaces
                         $subject = DB::table('subject')
+                            ->where('curriculum', $curriculum->curriculum)
                             ->whereRaw("REPLACE(LOWER(code), ' ', '') = ?", [strtolower($code)])
                             ->first();
 
@@ -237,7 +241,7 @@ class InstructorLoadsImport implements WithMultipleSheets, ToCollection
                             $i++;
                             continue;
                         }
-
+                        
                         $keys = [
                             'teacher_id' => (int) $teacher->id,
                             'subject_id' => (int) $subject->id,

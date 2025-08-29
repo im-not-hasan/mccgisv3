@@ -84,5 +84,79 @@ class SettingsController extends Controller
         return response()->json(['message' => 'Password Updated Successfully.']);
     }
 
+    public function getCurriculums()
+    {
+        $rows = DB::table('curriculums')
+            ->select('id', 'curriculum', 'display')
+            ->orderBy('curriculum', 'asc')
+            ->get();
+
+        \Log::info('[Settings] Fetched curriculums', ['count' => $rows->count()]);
+        return response()->json($rows);
+    }
+
+    public function storeCurriculum(Request $request)
+    {
+        $request->validate([
+            'curriculum' => 'required|integer|unique:curriculums,curriculum',
+            'display'    => 'nullable|boolean',
+        ]);
+
+        $display = (int) ($request->display ?? 0);
+
+        DB::table('curriculums')->insert([
+            'curriculum' => $request->curriculum,
+            'display'    => $display,
+        ]);
+
+        // Optional: ensure ONLY ONE active curriculum at a time
+        if ($display === 1) {
+            DB::table('curriculums')
+                ->where('curriculum', '!=', $request->curriculum)
+                ->update(['display' => 0]);
+        }
+
+        // \Log::info('[Settings] Curriculum created', ['curriculum' => $request->curriculum, 'display' => $display]);
+        return response()->json(['success' => true]);
+    }
+
+    public function toggleCurriculumDisplay(Request $request)
+    {
+        $request->validate([
+            'id'      => 'required|integer|exists:curriculums,id',
+            'display' => 'required|boolean',
+        ]);
+
+        $id      = (int) $request->id;
+        $display = (int) $request->display;
+
+        // Update the requested row
+        DB::table('curriculums')->where('id', $id)->update(['display' => $display]);
+
+        // Enforce single-active rule
+        if ($display === 1) {
+            DB::table('curriculums')->where('id', '!=', $id)->update(['display' => 0]);
+        }
+
+        $rows = DB::table('curriculums')
+            ->select('id', 'curriculum', 'display')
+            ->orderBy('curriculum', 'asc')
+            ->get();
+
+        // \Log::info('[Settings] Curriculum display toggled', ['id' => $id, 'display' => $display, 'count' => $rows->count()]);
+
+        return response()->json([
+            'message'     => 'Curriculum display updated',
+            'curriculums' => $rows,
+        ], 200);
+    }
+
+
+    public function deleteCurriculum($id)
+    {
+        DB::table('curriculums')->where('id', $id)->delete();
+        // \Log::info('[Settings] Curriculum deleted', ['id' => (int) $id]);
+        return response()->json(['success' => true]);
+    }
 
 }

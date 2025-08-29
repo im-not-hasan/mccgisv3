@@ -170,11 +170,11 @@ class StudentsController extends Controller
     public function studentSubjects(Request $request)
     {
         $username = session('username');
-        Log::info('Fetching studentSubjects for username:', [$username]);
+        //Log::info('Fetching studentSubjects for username:', [$username]);
 
-        // Step 1: Get student details
+        // Get student details
         $student = DB::table('student')->where('studid', $username)->first();
-        Log::debug('Student details fetched:', [$student]);
+        //Log::debug('Student details fetched:', [$student]);
 
         if (!$student) {
             Log::warning('No student found for studid:', [$username]);
@@ -187,18 +187,21 @@ class StudentsController extends Controller
         $regular = $student->regular;
         $studentId = $student->id;
 
-        Log::info('Student basic info:', [
-            'course' => $course,
-            'year' => $year,
-            'section' => $section,
-            'regular' => $regular,
-            'studentId' => $studentId
-        ]);
+        // Log::info('Student basic info:', [
+        //     'course' => $course,
+        //     'year' => $year,
+        //     'section' => $section,
+        //     'regular' => $regular,
+        //     'studentId' => $studentId
+        // ]);
 
-        // Step 2: Get active semester
+        // Get active semester & curriculum
         $activeSemester = DB::table('ay')->where('display', 1)->value('semester');
-        Log::info('Active semester fetched:', [$activeSemester]);
-
+        // Log::info('Active semester fetched:', [$activeSemester]);
+        $ay_id = DB::table('ay')->where('display', 1)->value('id');
+        $curriculum = DB::table('curriculums')
+            ->where('display',1)
+            ->first();
         $subjects = [];
 
         if ($regular == 1) {
@@ -209,9 +212,10 @@ class StudentsController extends Controller
                 ->where('course', $course)
                 ->where('year', $year)
                 ->where('semester', $activeSemester)
+                ->where('curriculum',$curriculum->curriculum)
                 ->get();
 
-            Log::debug('Subjects fetched for regular student:', [$subjectList]);
+            // Log::debug('Subjects fetched for regular student:', [$subjectList]);
 
             foreach ($subjectList as $subj) {
                 // Get teacher_id from assignments
@@ -222,38 +226,51 @@ class StudentsController extends Controller
                     ->where('section', $section)
                     ->value('teacher_id');
 
-                Log::debug("Teacher ID for subject {$subj->code}:", [$teacherId]);
+                // Log::debug("Teacher ID for subject {$subj->code}:", [$teacherId]);
 
                 // Get teacher details
                 if ($teacherId) {
                     $teacher = DB::table('teacher')->where('id', $teacherId)->first();
-                    Log::debug("Teacher details for teacher_id {$teacherId}:", [$teacher]);
+                    // Log::debug("Teacher details for teacher_id {$teacherId}:", [$teacher]);
                     $instructorName = $teacher ? "{$teacher->fname} {$teacher->lname}" : "N/A";
                 } else {
                     $instructorName = "N/A";
                 }
 
+                // Get grade for subject
+                $grade = DB::table('grades')
+                    ->where('student_id', $studentId)
+                    ->where('subject_id', $subj->id)
+                    ->where('teacher_id', $teacherId)
+                    ->where('course', $course)
+                    ->where('year', $year)
+                    ->where('section', $section)
+                    ->where('ay_id', $ay_id)
+                    ->where('submitted', 1)
+                    ->value('overall');
+
                 $subjects[] = [
                     'code' => $subj->code,
                     'title' => $subj->title,
                     'instructor' => $instructorName,
+                    'grade' => $grade,
                 ];
             }
 
         } else {
-            Log::info('Processing as IRREGULAR student');
+            //Log::info('Processing as IRREGULAR student');
 
             // Fetch their custom subjects
             $irregSubjects = DB::table('irregstudentsubject')
                 ->where('student_id', $studentId)
                 ->get();
 
-            Log::debug('Irregular student subjects fetched:', [$irregSubjects]);
+            //Log::debug('Irregular student subjects fetched:', [$irregSubjects]);
 
             foreach ($irregSubjects as $irreg) {
                 // Get subject details
                 $subj = DB::table('subject')->where('id', $irreg->subject_id)->first();
-                Log::debug("Subject details for irreg subject_id {$irreg->subject_id}:", [$subj]);
+                //Log::debug("Subject details for irreg subject_id {$irreg->subject_id}:", [$subj]);
 
                 if ($subj) {
                     // Get teacher_id from assignments
@@ -264,7 +281,7 @@ class StudentsController extends Controller
                         ->where('section', $section)
                         ->value('teacher_id');
 
-                    Log::debug("Teacher ID for subject {$subj->code}:", [$teacherId]);
+                    //Log::debug("Teacher ID for subject {$subj->code}:", [$teacherId]);
 
                     // Get teacher details
                     if ($teacherId) {
@@ -284,7 +301,7 @@ class StudentsController extends Controller
             }
         }
 
-        Log::info('Final subjects array to return:', [$subjects]);
+        //Log::info('Final subjects array to return:', [$subjects]);
 
         return response()->json(['subjects' => $subjects]);
     }

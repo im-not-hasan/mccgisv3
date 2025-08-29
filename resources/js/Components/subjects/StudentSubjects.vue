@@ -2,7 +2,7 @@
   <div class="p-4">
     <!-- Header Summary -->
     <div class="mb-4">
-      <h1 class="text-2xl font-bold text-mccblue">My Subjects</h1>
+      <h1 class="text-2xl font-bold text-mccblue">My Subjects & Grades</h1>
       <p class="text-gray-600 mt-1">
         You are enrolled in {{ totalSubjects }} unique subject<span v-if="totalSubjects !== 1">s</span> this semester.
       </p>

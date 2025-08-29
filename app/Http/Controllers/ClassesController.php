@@ -232,6 +232,11 @@ class ClassesController extends Controller
                 return response()->json(['message' => 'Academic year not found'], 404);
             }
 
+            // Get active curriculum
+            $curriculum = DB::table('curriculums')
+            ->where('display',1)
+            ->first();
+
             // Fetch subjects for the class, join assignments + teacher
             $subjects = DB::table('subject')
                 ->leftJoin('assignments', function ($join) use ($class, $ay) {
@@ -240,7 +245,7 @@ class ClassesController extends Controller
                         ->where('assignments.year', $class->year)
                         ->where('assignments.section', $class->section)
                         ->where('assignments.ay_id', $ay->id);
-                        // no semester filter here since assignments has none
+                        
                 })
                 ->leftJoin('teacher', 'assignments.teacher_id', '=', 'teacher.id')
                 ->select(
@@ -254,7 +259,8 @@ class ClassesController extends Controller
                 )
                 ->where('subject.course', $class->course)
                 ->where('subject.year', $class->year)
-                ->where('subject.semester', $ay->semester) // keep using semester from subject
+                ->where('subject.semester', $ay->semester) 
+                ->where('subject.curriculum', $curriculum->curriculum)
                 ->get();
             
                 

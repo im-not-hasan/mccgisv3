@@ -23,7 +23,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
          <CardSpotlight
           label="My Subjects"
-          :count="counts.class || 0"
+          :count="counts.subjects || 0"
           iconName="subjects"
           :useSvg="true"
           @click="goToSubjects"
@@ -32,7 +32,7 @@
 <!---counts.class = subject count, counts.subjects = class count-->
         <CardSpotlight
           label="My Classes"
-          :count="counts.subjects || 0" 
+          :count="counts.class || 0" 
           iconName="grades"
           :useSvg="true"
           @click="goToClasses"

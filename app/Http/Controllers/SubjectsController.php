@@ -18,18 +18,23 @@ class SubjectsController extends Controller
             ->pluck('semester')
             ->map(fn($s) => $s == 3 ? 'summer' : (string) $s)
             ->toArray();
+        $curriculum = DB::table('curriculums')
+            ->where('display',1)
+            ->first();
 
         $baseQuery = DB::table('subject')->select('course', DB::raw('count(*) as total'));
 
         if ($mode === 'active') {
-            $baseQuery->whereIn('semester', $activeSemesters);
+            $baseQuery
+            ->where('curriculum',$curriculum->curriculum)
+            ->whereIn('semester', $activeSemesters);
         }
 
-        $counts = $baseQuery->groupBy('course')->pluck('total', 'course');
+        $counts = $baseQuery->where('curriculum',$curriculum->curriculum)->groupBy('course')->pluck('total', 'course');
 
         // Total vs Active overall count
-        $totalCount = DB::table('subject')->count();
-        $activeCount = DB::table('subject')->whereIn('semester', $activeSemesters)->count();
+        $totalCount = DB::table('subject')->where('curriculum',$curriculum->curriculum)->count();
+        $activeCount = DB::table('subject')->where('curriculum',$curriculum->curriculum)->whereIn('semester', $activeSemesters)->count();
 
         return response()->json([
             'byCourse' => $counts,
@@ -50,10 +55,14 @@ class SubjectsController extends Controller
             ->map(function ($s) {
                 return $s == 3 ? 'summer' : (string) $s;
             });
+        $curriculum = DB::table('curriculums')
+            ->where('display',1)
+            ->first();
 
         // Fetch subjects of this course that match active semesters
         $subjects = DB::table('subject')
             ->where('course', $course)
+            ->where('curriculum',$curriculum->curriculum)
             ->whereIn('semester', $activeSemesters)
             ->select('id', 'code', 'title', 'lecunit', 'labunit', 'totalunit', 'pre', 'year', 'semester')
             ->get();
@@ -63,7 +72,11 @@ class SubjectsController extends Controller
 
     public function getAllSubjectsByCourse($course)
     {
+        $curriculum = DB::table('curriculums')
+            ->where('display',1)
+            ->first();
         $subjects = DB::table('subject')
+            ->where('curriculum',$curriculum->curriculum)
             ->where('course', $course)
             ->select('id', 'code', 'title', 'lecunit', 'labunit', 'totalunit', 'pre', 'year', 'semester')
             ->get();
@@ -72,7 +85,10 @@ class SubjectsController extends Controller
     }
 
     public function store(Request $request)
-    {
+    {   
+        $curriculum = DB::table('curriculums')
+            ->where('display',1)
+            ->first();
         $validated = $request->validate([
             'code'      => 'required|string|max:20',
             'title'     => 'required|string|max:255',
@@ -97,9 +113,10 @@ class SubjectsController extends Controller
                 'year'      => $validated['year'],
                 'semester'  => $validated['semester'],
                 'course'    => $validated['course'],
+                'curriculum' => $curriculum->curriculum
             ]);
 
-            Log::info("Subject added successfully", ['code' => $validated['code']]);
+            // Log::info("Subject added successfully", ['code' => $validated['code']]);
 
             return response()->json(['message' => 'Subject added successfully'], 201);
         } catch (\Exception $e) {

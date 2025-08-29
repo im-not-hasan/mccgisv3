@@ -254,6 +254,12 @@ Route::post('/settings/academic-year', [SettingsController::class, 'storeAcademi
 // Change Pass
 Route::post('/settings/update-password', [SettingsController::class, 'updatePassword']);
 
+// Curriculum
+Route::get('/curriculums', [SettingsController::class, 'getCurriculums']);
+Route::post('/settings/curriculum', [SettingsController::class, 'storeCurriculum']);
+Route::post('/curriculums/toggle-display', [SettingsController::class, 'toggleCurriculumDisplay']);
+Route::delete('/curriculums/{id}', [SettingsController::class, 'deleteCurriculum']);
+
 
 
 
