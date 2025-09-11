@@ -9538,7 +9538,6 @@
         "filp/whoops",
         "hamcrest/hamcrest-php",
         "laravel/breeze",
-        "laravel/pail",
         "laravel/pint",
         "laravel/sail",
         "mockery/mockery",
