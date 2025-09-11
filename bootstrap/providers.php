@@ -2,5 +2,5 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    Laravel\Pail\PailServiceProvider::class,
+    app()->environment('local') ? Laravel\Pail\PailServiceProvider::class : null,
 ];
