@@ -134,18 +134,22 @@ onMounted(() => {
 
 async function getRecaptchaToken(action = 'login') {
   if (typeof grecaptcha === 'undefined' || !siteKey) {
-    console.warn('reCAPTCHA site key or script missing')
-    return null
+    console.warn('reCAPTCHA site key or script missing');
+    return null;
   }
-  // Wait for grecaptcha to be ready (callback → Promise)
-  await new Promise(resolve => grecaptcha.ready(resolve))
-  try {
-    return await grecaptcha.execute(siteKey, { action })
-  } catch (e) {
-    console.error('reCAPTCHA error:', e)
-    return null
-  }
+
+  return new Promise((resolve, reject) => {
+    grecaptcha.ready(() => {
+      grecaptcha.execute(siteKey, { action })
+        .then(token => resolve(token))
+        .catch(err => {
+          console.error('reCAPTCHA error:', err);
+          reject(null);
+        });
+    });
+  });
 }
+
 
 
 async function submit() {
