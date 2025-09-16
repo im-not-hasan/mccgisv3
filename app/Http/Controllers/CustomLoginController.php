@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Login; // Import the Login model
+use App\Models\Login;
+use App\Services\ReCaptcha;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 
@@ -11,83 +13,81 @@ class CustomLoginController extends Controller
 {
     public function login(Request $request)
     {
-        // Log the input and stored password for debugging
-        \Log::info('Login attempt - Username: ' . $request->Username);
-        \Log::info('Input password: ' . $request->Password);
-        
-
+        // Basic validation
         $request->validate([
-            'Username' => 'required|string',
-            'Password' => 'required|string',
+            'Username'        => 'required|string',
+            'Password'        => 'required|string',
+            'recaptcha_token' => 'required|string',
         ]);
 
-        // Use Eloquent to find the user by Username
-        $user = Login::where('Username', $request->Username)->first(); // Fetch the user using the Login model
-        $info = password_get_info($user->password);
+        // 1) reCAPTCHA v3 verification
+        $check = ReCaptcha::verify($request->recaptcha_token, $request->ip());
+        if (!$check['ok']) {
+            \Log::warning('reCAPTCHA failed', ['score' => $check['score'], 'raw' => $check['raw'] ?? null]);
+            return response()->json([
+                'error'   => 'recaptcha_failed',
+                'message' => 'reCAPTCHA verification failed.',
+            ], 422);
+        }
+
+        // 2) Lockout check
+        $lockout = Session::get('lockout_time');
+        if ($lockout && now()->lt($lockout)) {
+            return response()->json(['error' => 'locked'], 429);
+        }
+
+        // 3) Find user
+        $user = Login::where('username', $request->Username)->first();
+        if (!$user) {
+            return response()->json(['error' => 'not_found'], 404);
+        }
+
+        // 4) Handle legacy/plain password -> upgrade to hash
+        $info     = password_get_info($user->password);
         $isHashed = $info['algoName'] !== 'unknown';
 
-        // Check if user exists
-        if (!$user) {
-            return response()->json(['error' => 'not_found'], 404); // User not found
-        }
         if ($isHashed) {
-        // Check password (assuming it's hashed in the database)
             if (!Hash::check($request->Password, $user->password)) {
-                $attempts = Session::get('login_attempts', 3); // Get current login attempts
-                $attempts--;
-                Session::put('login_attempts', $attempts); // Store updated attempts
-
+                $attempts = Session::get('login_attempts', 3) - 1;
+                Session::put('login_attempts', $attempts);
                 if ($attempts <= 0) {
-                    Session::put('lockout_time', now()->addSeconds(60)); // Lockout after 3 failed attempts
-                    return response()->json(['error' => 'locked'], 429); // Return lockout status
+                    Session::put('lockout_time', now()->addSeconds(60));
+                    return response()->json(['error' => 'locked'], 429);
                 }
-
-                return response()->json([
-                    'error' => 'wrong_password',
-                    'attempts' => $attempts, // Return remaining attempts
-                ], 401);
+                return response()->json(['error' => 'wrong_password', 'attempts' => $attempts], 401);
             }
-         }
-        else{
+        } else {
             if ($request->Password !== $user->password) {
-                $attempts = Session::get('login_attempts', 3); // Get current login attempts
-                $attempts--;
-                Session::put('login_attempts', $attempts); // Store updated attempts
-
+                $attempts = Session::get('login_attempts', 3) - 1;
+                Session::put('login_attempts', $attempts);
                 if ($attempts <= 0) {
-                    Session::put('lockout_time', now()->addSeconds(60)); // Lockout after 3 failed attempts
-                    return response()->json(['error' => 'locked'], 429); // Return lockout status
+                    Session::put('lockout_time', now()->addSeconds(60));
+                    return response()->json(['error' => 'locked'], 429);
                 }
-
-                return response()->json([
-                    'error' => 'wrong_password',
-                    'attempts' => $attempts, // Return remaining attempts
-                ], 401);
+                return response()->json(['error' => 'wrong_password', 'attempts' => $attempts], 401);
             }
+            // upgrade to hashed
             $user->password = Hash::make($request->Password);
             $user->save();
         }
-        // Reset attempts and create session on successful login
-        Session::put('login_attempts', 3); // Reset the attempts to 3
-        Session::put('fullname', $user->fullname); // Store full name
-        Session::put('level', $user->level); // Store user level
-        Session::put('user_id', $user->id ?? null); // Optionally store the user ID
+
+        // 5) Success: reset attempts
+        Session::put('login_attempts', 3);
+
+        // 6) Authenticate with Laravel guard so @auth works
+        Auth::login($user); // now Auth::check() is true, @auth works, route model policies, etc.
+        $request->session()->regenerate();
+        // 7) (Optional) keep your session keys if other code depends on them
+        Session::put('fullname', $user->fullname);
+        Session::put('level', $user->level);
+        Session::put('user_id', $user->id ?? null);
         Session::put('username', $user->username);
 
-        // Debugging: Log session data
-        \Log::info('User logged in:', [
-            'level' => $user->level,
-            'username' => $user->username,
-            'fullname' => $user->fullname,
-        ]);
-
-        // Return redirect URL based on user level
         return response()->json([
-        'redirect' => route('dashboard'), // route('dashboard') works too
-        'fullname' => $user->fullname,
-        'username' => $user->username,
-        'level' => $user->level,
-    ]);
-
+            'redirect' => route('dashboard'),
+            'fullname' => $user->fullname,
+            'username' => $user->username,
+            'level'    => $user->level,
+        ]);
     }
 }

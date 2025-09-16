@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
@@ -72,9 +73,11 @@ Route::get('/settings', fn () => Inertia::render('Settings'))->name('settings');
 Route::post('/custom-login', [CustomLoginController::class, 'login'])->name('custom.login');
 
 Route::post('/logout', function () {
-    \Session::flush(); // Clears all session data
-    return response()->json(['message' => 'Logged out']);
-});
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect()->to('/');
+})->name('logout');
 
 
 

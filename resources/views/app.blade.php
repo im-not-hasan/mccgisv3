@@ -3,8 +3,11 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-
+        <meta name="recaptcha-site-key" content="{{ config('services.recaptcha.site_key') }}">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        
+        <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -13,9 +16,9 @@
         <!-- Scripts -->
         @auth
             @routes
-            @inertiaHead
         @endauth
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
+        @inertiaHead
         
         
        

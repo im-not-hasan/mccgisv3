@@ -146,10 +146,10 @@ class GradeSheetController extends Controller
 
         $grouped = $grouped->merge($femaleStudents);
 
-        // Log::info('Students fetched for GradeSheet', [
-        //     'count' => $students->count(),
-        //     'students' => $students,
-        // ]);
+        Log::info('Students fetched for GradeSheet', [
+            'count' => $students->count(),
+            'students' => $students,
+        ]);
 
         // Fetch subject info too
         $subject = DB::table('subject')->where('id', $subject_id)->first();

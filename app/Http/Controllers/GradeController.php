@@ -228,6 +228,9 @@ class GradeController extends Controller
         $gradeComponents = $request->input('gradeComponents', []);
         $gradesData = $request->input('gradesData', []);
         $gradesSummary = $request->input('gradesSummary', []);
+        $curriculum = DB::table('curriculums')
+            ->where('display',1)
+            ->first();
 
         // Find teacher
         $teacher = DB::table('teacher')->where('teachid', $teacherUsername)->first();
@@ -236,7 +239,7 @@ class GradeController extends Controller
         }
 
         // Find subject
-        $subject = DB::table('subject')->where('code', $subjectCode)->first();
+        $subject = DB::table('subject')->where('code', $subjectCode)->where('curriculum',$curriculum->curriculum)->first();
         if (!$subject) {
             return response()->json(['error' => 'Subject not found'], 404);
         }

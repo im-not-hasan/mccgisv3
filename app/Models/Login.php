@@ -2,14 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Login extends Model
+class Login extends Authenticatable
 {
-    protected $table = 'login'; // The name of the table
+    protected $table = 'login';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
 
-    // Optional: You can specify which fields can be mass-assigned if needed
-    protected $fillable = ['Username', 'Password', 'Fullname', 'Level'];
+    // Use the actual column names in your table (lowercase vs. uppercase matters!)
+    protected $fillable = ['username', 'password', 'fullname', 'level'];
 
-    // Optionally, you can set other properties (like hidden fields, etc)
+    protected $hidden = ['password'];
+
+    // If your `login` table does NOT have remember_token, disable it:
+    protected $rememberTokenName = null;
+
+    // (Optional) If you ever use guards that expect an email field, you can ignore;
+    // You’re logging users in manually (Auth::login($user)), so this is enough.
 }

@@ -115,12 +115,12 @@ const confirmLogout = async () => {
   }
 }
 
-const logout = async () => {
+async function logout(){
   try {
-    await axios.post('/logout', {}, { withCredentials: true })
+    await axios.post('/logout') // CSRF cookie already handled by Laravel’s default setup
     window.location.href = '/'
-  } catch (error) {
-    console.error('Logout failed:', error.response?.data || error)
+  } catch (e) {
+    console.error(e)
   }
 }
 

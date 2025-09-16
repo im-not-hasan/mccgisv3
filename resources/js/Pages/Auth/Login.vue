@@ -83,10 +83,12 @@
           <!-- Login Button -->
           <button
             type="submit"
-            class="w-full select-none bg-mccblue hover:bg-mccdarkblue text-white font-semibold py-2 rounded-md transition duration-200"
+            :disabled="submitting"
+            class="w-full select-none bg-mccblue hover:bg-mccdarkblue disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2 rounded-md transition duration-200"
           >
-            Log In
+            {{ submitting ? 'Logging in…' : 'Log In' }}
           </button>
+
 
           <!-- Forgot Password -->
           <div class="text-center">
@@ -105,30 +107,46 @@
 
 
 
-
 <script setup>
 import Swal from 'sweetalert2'
 import axios from 'axios'
-import { reactive } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
+import WavyBackground from '@/Components/InspiraUI/WavyBackground.vue'
 
 const form = reactive({
   Username: '',
   Password: '',
   remember: false,
 })
-
-import { ref } from 'vue'
-import WavyBackground from '@/Components/InspiraUI/WavyBackground.vue'
-
 const showPassword = ref(false)
+const submitting = ref(false)
 
 function togglePassword() {
   showPassword.value = !showPassword.value
 }
+function updateEyeIcon() {}
 
-function updateEyeIcon() {
-  // Just here to trigger eye visibility via v-if
+let siteKey = ''
+onMounted(() => {
+  // Read site key from <meta>
+  siteKey = document.querySelector('meta[name="recaptcha-site-key"]')?.content || ''
+})
+
+async function getRecaptchaToken(action = 'login') {
+  if (typeof grecaptcha === 'undefined' || !siteKey) {
+    console.warn('reCAPTCHA site key or script missing')
+    return null
+  }
+  // Wait for grecaptcha to be ready (callback → Promise)
+  await new Promise(resolve => grecaptcha.ready(resolve))
+  try {
+    return await grecaptcha.execute(siteKey, { action })
+  } catch (e) {
+    console.error('reCAPTCHA error:', e)
+    return null
+  }
 }
+
 
 async function submit() {
   if (!form.Username || !form.Password) {
@@ -136,42 +154,52 @@ async function submit() {
       icon: 'error',
       title: 'Oops...',
       text: 'Please fill in both Username and Password.',
-    });
+    })
   }
 
-  try {
-    const response = await axios.post('/custom-login', form);
+  if (submitting.value) return
+  submitting.value = true
 
-    // Debugging: Log session data
-    console.log('Session data:', response.data);
-    const fullname = response.data.fullname || 'User';
+  try {
+    // 1) Get v3 token
+    const token = await getRecaptchaToken('login')
+    if (!token) {
+      submitting.value = false
+      return Swal.fire('reCAPTCHA Failed', 'Please refresh and try again.', 'error')
+    }
+
+    // 2) Submit with token
+    const payload = { ...form, recaptcha_token: token }
+    const response = await axios.post('/custom-login', payload)
+
+    // 3) Success
+    const fullname = response.data.fullname || 'User'
     Swal.fire({
       icon: 'success',
       title: 'Login Successful!',
-      text: 'Welcome, ' + fullname + "!",
+      text: 'Welcome, ' + fullname + '!',
       timer: 1800,
       showConfirmButton: false,
     }).then(() => {
-      window.location.href = response.data.redirect;
-    });
-
+      window.location.href = response.data.redirect
+    })
   } catch (error) {
-    const status = error.response?.status;
-    const data = error.response?.data;
+    const status = error.response?.status
+    const data = error.response?.data
 
-    if (status === 404 && data.error === 'not_found') {
-      Swal.fire('User Not Found', 'No account with that Username.', 'error');
-    } else if (status === 401 && data.error === 'wrong_password') {
-      Swal.fire(
-        'Incorrect Password',
-        `Wrong password. ${data.attempts} attempt(s) remaining.`,
-        'error'
-      );
-    } else if (status === 429 && data.error === 'locked') {
-      lockoutCountdown();
+    if (status === 422 && data?.error === 'recaptcha_failed') {
+      Swal.fire('reCAPTCHA Failed', 'Verification failed. Please try again.', 'error')
+    } else if (status === 404 && data?.error === 'not_found') {
+      Swal.fire('User Not Found', 'No account with that Username.', 'error')
+    } else if (status === 401 && data?.error === 'wrong_password') {
+      Swal.fire('Incorrect Password', `Wrong password. ${data.attempts} attempt(s) remaining.`, 'error')
+    } else if (status === 429 && data?.error === 'locked') {
+      lockoutCountdown()
     } else {
-      Swal.fire('Login Failed', 'Something went wrong. Please try again.', 'error');
+      Swal.fire('Login Failed', 'Something went wrong. Please try again.', 'error')
     }
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -198,6 +226,3 @@ function lockoutCountdown() {
   })
 }
 </script>
-
-
-
