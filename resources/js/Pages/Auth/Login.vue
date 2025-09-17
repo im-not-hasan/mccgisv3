@@ -82,12 +82,14 @@
 
           <!-- Login Button -->
           <button
-            type="submit"
-            :disabled="submitting"
-            class="w-full select-none bg-mccblue hover:bg-mccdarkblue disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2 rounded-md transition duration-200"
-          >
-            {{ submitting ? 'Logging in…' : 'Log In' }}
-          </button>
+  class="g-recaptcha"
+  data-sitekey="6LdfZ8srAAAAADvFR2fb8TaU1F-7GEmsk9qu9Sdt"
+  data-callback="onSubmit"
+  data-action="login"
+>
+  Log In
+</button>
+
 
 
           <!-- Forgot Password -->
@@ -152,7 +154,7 @@ async function getRecaptchaToken(action = 'login') {
 
 
 
-async function submit() {
+async function submit(token) {
   if (!form.Username || !form.Password) {
     return Swal.fire({
       icon: 'error',
@@ -163,10 +165,11 @@ async function submit() {
 
   if (submitting.value) return
   submitting.value = true
-
+  
   try {
     // 1) Get v3 token
     const token = await getRecaptchaToken('login')
+    console.log("reCAPTCHA token:", token);
     if (!token) {
       submitting.value = false
       return Swal.fire('reCAPTCHA Failed', 'Please refresh and try again.', 'error')
