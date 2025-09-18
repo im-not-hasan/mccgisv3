@@ -21,5 +21,24 @@
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+    RewriteRule ^(.*)$ index.php [L]
 </IfModule>
+
+# Disable directory listing
+Options -Indexes
+
+# Block access to sensitive files (even if misplaced in /public)
+<FilesMatch "\.(env|log|htaccess|htpasswd|ini|sh|sql|bak|swp|php([0-9])?)$">
+    Require all denied
+</FilesMatch>
+
+# Hide server signature
+ServerSignature Off
+
+# Prevent script execution in storage/uploads (if you customize paths)
+<Directory ~ "/public/storage">
+    <FilesMatch "\.(php|php5|phtml|pl|py|jsp|asp)$">
+        Require all denied
+    </FilesMatch>
+</Directory>
+
