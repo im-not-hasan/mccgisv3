@@ -24,7 +24,7 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 # Block access to sensitive files that may be accidentally placed in /public
-<FilesMatch "\.(env|log|htaccess|htpasswd|ini|sh|sql|bak|swp|phar|zip|phtml|php[0-9\.\-]*)$">
+<FilesMatch "\.(env|log|htpasswd|ini|sh|sql|bak|swp|phar|zip|phtml|php[0-9\.\-]*)$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
