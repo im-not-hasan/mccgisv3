@@ -32,3 +32,8 @@
         Deny from all
     </IfModule>
 </FilesMatch>
+<Directory ~ "/public/storage">
+    <FilesMatch "\.(php|php5|phtml|pl|py|jsp|asp)$">
+        Require all denied
+    </FilesMatch>
+</Directory>
