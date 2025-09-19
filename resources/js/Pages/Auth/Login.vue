@@ -6,7 +6,7 @@
     <div class="w-full max-w-md text-center">
       <img src="/logo.png" alt="Logo" class="h-52 select-none md:h-80 mb-[-70px] md:mb-[-35px] mx-auto" />
       <p class="hidden md:block text-lg md:text-xl text-mccmidnightblue mt-0">
-        Monitor your grades in real-time with MCC’s official grading and info system.
+        Monitorr your grades in real-time with MCC’s official grading and info system.
       </p>
     </div>
   </div>
