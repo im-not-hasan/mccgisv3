@@ -6,7 +6,6 @@ use App\Models\Login; // Import the Login model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Http;
 
 class CustomLoginController extends Controller
 {
@@ -15,34 +14,12 @@ class CustomLoginController extends Controller
         // Log the input and stored password for debugging
         \Log::info('Login attempt - Username: ' . $request->Username);
         \Log::info('Input password: ' . $request->Password);
-        \Log::info('Recaptcha Token: ' . $request->recaptcha_token);
+        
 
         $request->validate([
-            'Username'        => 'required|string',
-            'Password'        => 'required|string',
-            'recaptcha_token' => 'required|string',
+            'Username' => 'required|string',
+            'Password' => 'required|string',
         ]);
-        \Log::info('🔑 Site Key (from .env): ' . env('RECAPTCHA_SITE_KEY'));
-         \Log::info('🔑 Secret Key (from .env): ' . env('RECAPTCHA_SECRET_KEY'));
-
-        // 🔑 Verify reCAPTCHA
-        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret'   => env('RECAPTCHA_SECRET_KEY'),
-            'response' => $request->recaptcha_token,
-            'remoteip' => $request->ip(),
-        ]);
-
-        $result = $response->json();
-
-        \Log::info('🟢 reCAPTCHA verification result:', $result);
-        
-        if (empty($result['success']) || $result['score'] < 0.5) {
-            return response()->json([
-                'error'   => 'recaptcha_failed',
-                'message' => 'reCAPTCHA verification failed',
-                'debug'   => $result, // <-- remove this in production
-            ], 422);
-        }
 
         // Use Eloquent to find the user by Username
         $user = Login::where('Username', $request->Username)->first(); // Fetch the user using the Login model
