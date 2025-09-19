@@ -17,6 +17,12 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
+<IfModule mod_headers.c>
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
 # --------------------------
 # Security hardening
 # --------------------------
@@ -37,3 +43,5 @@ RedirectMatch 404 ^/storage/.*
 
 # Disable directory browsing
 Options -Indexes
+
+

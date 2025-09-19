@@ -83,12 +83,10 @@
           <!-- Login Button -->
           <button
             type="submit"
-            :disabled="submitting"
-            class="w-full select-none bg-mccblue hover:bg-mccdarkblue disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2 rounded-md transition duration-200"
+            class="w-full select-none bg-mccblue hover:bg-mccdarkblue text-white font-semibold py-2 rounded-md transition duration-200"
           >
-            {{ submitting ? 'Logging in…' : 'Log In' }}
+            Log In
           </button>
-
 
           <!-- Forgot Password -->
           <div class="text-center">
@@ -107,6 +105,7 @@
 
 
 
+
 <script setup>
 import Swal from 'sweetalert2'
 import axios from 'axios'
@@ -116,41 +115,37 @@ import WavyBackground from '@/Components/InspiraUI/WavyBackground.vue'
 const form = reactive({
   Username: '',
   Password: '',
+  recaptcha_token: '',
   remember: false,
 })
+
 const showPassword = ref(false)
-const submitting = ref(false)
+let siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
 
 function togglePassword() {
   showPassword.value = !showPassword.value
 }
+
 function updateEyeIcon() {}
 
-let siteKey = ''
 onMounted(() => {
-  // Read site key from <meta>
-  siteKey = document.querySelector('meta[name="recaptcha-site-key"]')?.content || ''
+  if (siteKey && !window.grecaptcha) {
+    const script = document.createElement('script')
+    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`
+    script.async = true
+    script.defer = true
+    document.head.appendChild(script)
+  }
 })
 
 async function getRecaptchaToken(action = 'login') {
-  if (typeof grecaptcha === 'undefined' || !siteKey) {
-    console.warn('reCAPTCHA site key or script missing');
-    return null;
+  if (!window.grecaptcha || !siteKey) {
+    console.warn('reCAPTCHA not loaded or siteKey missing')
+    return null
   }
-
-  return new Promise((resolve, reject) => {
-    grecaptcha.ready(() => {
-      grecaptcha.execute(siteKey, { action })
-        .then(token => resolve(token))
-        .catch(err => {
-          console.error('reCAPTCHA error:', err);
-          reject(null);
-        });
-    });
-  });
+  await new Promise(resolve => window.grecaptcha.ready(resolve))
+  return await window.grecaptcha.execute(siteKey, { action })
 }
-
-
 
 async function submit() {
   if (!form.Username || !form.Password) {
@@ -161,22 +156,20 @@ async function submit() {
     })
   }
 
-  if (submitting.value) return
-  submitting.value = true
-
   try {
-    // 1) Get v3 token
+    // 🔑 Step 1: Get token from Google
     const token = await getRecaptchaToken('login')
     if (!token) {
-      submitting.value = false
       return Swal.fire('reCAPTCHA Failed', 'Please refresh and try again.', 'error')
     }
 
-    // 2) Submit with token
-    const payload = { ...form, recaptcha_token: token }
-    const response = await axios.post('/custom-login', payload)
+    // 🔑 Step 2: Send form + token to backend
+    const response = await axios.post('/custom-login', {
+      ...form,
+      recaptcha_token: token,
+    })
 
-    // 3) Success
+    // Success
     const fullname = response.data.fullname || 'User'
     Swal.fire({
       icon: 'success',
@@ -202,12 +195,9 @@ async function submit() {
     } else {
       Swal.fire('Login Failed', 'Something went wrong. Please try again.', 'error')
     }
-  } finally {
-    submitting.value = false
   }
 }
 
-// Countdown for lockout
 function lockoutCountdown() {
   let seconds = 60
   Swal.fire({
@@ -230,3 +220,5 @@ function lockoutCountdown() {
   })
 }
 </script>
+
+
