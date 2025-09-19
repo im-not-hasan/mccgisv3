@@ -36,7 +36,7 @@ class CustomLoginController extends Controller
 
         \Log::info('🟢 reCAPTCHA verification result:', $result);
         
-        if (empty($result['success']) || $result['score'] < 0.99) {
+        if (empty($result['success']) || $result['score'] < 0.5) {
             return response()->json([
                 'error'   => 'recaptcha_failed',
                 'message' => 'reCAPTCHA verification failed',
