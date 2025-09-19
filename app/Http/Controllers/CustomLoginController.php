@@ -22,8 +22,8 @@ class CustomLoginController extends Controller
             'Password'        => 'required|string',
             'recaptcha_token' => 'required|string',
         ]);
-        \Log::info('🔑 Site Key (from .env): ' . env('RECAPTCHA_SITE_KEY'));
-         \Log::info('🔑 Secret Key (from .env): ' . env('RECAPTCHA_SECRET_KEY'));
+        //\Log::info('🔑 Site Key (from .env): ' . env('RECAPTCHA_SITE_KEY'));
+        //\Log::info('🔑 Secret Key (from .env): ' . env('RECAPTCHA_SECRET_KEY'));
 
         // 🔑 Verify reCAPTCHA
         $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
@@ -36,7 +36,7 @@ class CustomLoginController extends Controller
 
         \Log::info('🟢 reCAPTCHA verification result:', $result);
         
-        if (empty($result['success']) || $result['score'] < 0.5) {
+        if (empty($result['success']) || $result['score'] < 0.99) {
             return response()->json([
                 'error'   => 'recaptcha_failed',
                 'message' => 'reCAPTCHA verification failed',
