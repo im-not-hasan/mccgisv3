@@ -105,6 +105,7 @@
 
 
 
+
 <script setup>
 import Swal from 'sweetalert2'
 import axios from 'axios'
@@ -119,44 +120,31 @@ const form = reactive({
 })
 
 const showPassword = ref(false)
-const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
+let siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
 
 function togglePassword() {
   showPassword.value = !showPassword.value
 }
+
 function updateEyeIcon() {}
 
 onMounted(() => {
-  console.log("🔑 Using site key:", siteKey)
-  if (siteKey && !document.querySelector('#recaptcha-script')) {
+  if (siteKey && !window.grecaptcha) {
     const script = document.createElement('script')
-    script.id = 'recaptcha-script'
     script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`
     script.async = true
     script.defer = true
-    script.onload = () => console.log("✅ reCAPTCHA script loaded")
     document.head.appendChild(script)
   }
 })
 
 async function getRecaptchaToken(action = 'login') {
-  return new Promise((resolve, reject) => {
-    if (!window.grecaptcha) {
-      console.warn("⚠️ grecaptcha not ready")
-      return reject("grecaptcha not loaded")
-    }
-    window.grecaptcha.ready(() => {
-      window.grecaptcha.execute(siteKey, { action })
-        .then(token => {
-          console.log("✅ Got token:", token.substring(0, 15) + "...")
-          resolve(token)
-        })
-        .catch(err => {
-          console.error("❌ Token error:", err)
-          reject(err)
-        })
-    })
-  })
+  if (!window.grecaptcha || !siteKey) {
+    console.warn('reCAPTCHA not loaded or siteKey missing')
+    return null
+  }
+  await new Promise(resolve => window.grecaptcha.ready(resolve))
+  return await window.grecaptcha.execute(siteKey, { action })
 }
 
 async function submit() {
@@ -169,24 +157,30 @@ async function submit() {
   }
 
   try {
-    // Step 1: Get token
+    // 🔑 Step 1: Get token from Google
     const token = await getRecaptchaToken('login')
-    form.recaptcha_token = token
+    if (!token) {
+      return Swal.fire('reCAPTCHA Failed', 'Please refresh and try again.', 'error')
+    }
 
-    // Step 2: Send to backend
-    const response = await axios.post('/custom-login', form)
+    // 🔑 Step 2: Send form + token to backend
+    const response = await axios.post('/custom-login', {
+      ...form,
+      recaptcha_token: token,
+    })
 
+    // Success
+    const fullname = response.data.fullname || 'User'
     Swal.fire({
       icon: 'success',
       title: 'Login Successful!',
-      text: 'Welcome, ' + (response.data.fullname || 'User') + '!',
+      text: 'Welcome, ' + fullname + '!',
       timer: 1800,
       showConfirmButton: false,
     }).then(() => {
       window.location.href = response.data.redirect
     })
   } catch (error) {
-    console.error("❌ Login error:", error)
     const status = error.response?.status
     const data = error.response?.data
 
@@ -226,3 +220,5 @@ function lockoutCountdown() {
   })
 }
 </script>
+
+
