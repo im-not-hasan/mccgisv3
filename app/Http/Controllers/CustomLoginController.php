@@ -40,6 +40,7 @@ class CustomLoginController extends Controller
             return response()->json([
                 'error'   => 'recaptcha_failed',
                 'message' => 'reCAPTCHA verification failed',
+                'debug'   => $result, // <-- remove this in production
             ], 422);
         }
 
