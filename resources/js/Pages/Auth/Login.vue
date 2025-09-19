@@ -120,7 +120,7 @@ const form = reactive({
 })
 
 const showPassword = ref(false)
-let siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
+const siteKey = "6LdfZ8srAAAAADvFR2fb8TaU1F-7GEmsk9qu9Sdt"
 
 function togglePassword() {
   showPassword.value = !showPassword.value
