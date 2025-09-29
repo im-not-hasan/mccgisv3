@@ -17,8 +17,7 @@
         </p>
       </div>
 
-      <!-- 🔵 Active Semesters Banner -->
-      <div v-if="activeSemesters.length" class="bg-mccblue text-white px-4 py-2 rounded mb-4 shadow">
+      <div v-if="activeSemesters.length" class="bg-mcclightblue text-white px-4 py-2 rounded mb-4 shadow">
         Active Semesters:
         <span class="font-bold">
           {{ activeSemesters.map(s => s === '1' ? 'First Semester' : s === '2' ? 'Second Semester' : 'Summer').join(', ') }}
@@ -26,7 +25,7 @@
       </div>
 
       <!-- 📚 Quick Access Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
         <CardSpotlight
           label="Classes"
           :count="counts.class || 0"
@@ -44,6 +43,16 @@
           @click="goToStudents"
           class="cursor-pointer"
         />
+
+        <CardSpotlight
+          label="TOR Requests"
+          :count="TOR_requests"
+          iconName="grades"
+          :useSvg="true"
+          @click="goToTORRequests"
+          class="cursor-pointer"
+        />
+
       </div>
 
       <!-- 📝 Announcements Section -->
@@ -53,15 +62,10 @@
       </div>
 
       <!-- 📊 Quick Stats -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-white rounded shadow p-4 text-center">
-          <p class="text-gray-500">Total Students</p>
-          <p class="text-2xl font-bold text-mccblue">{{ studentCounts.total }}</p>
-        </div>
-
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded shadow p-4 text-center">
           <p class="text-gray-500">Pending Requests</p>
-          <p class="text-2xl font-bold text-orange-500">{{ pendingRequests.length }}</p>
+          <p class="text-2xl font-bold text-orange-500">{{ pendingRequests }}</p>
         </div>
 
         <div class="bg-white rounded shadow p-4 text-center">
@@ -70,8 +74,8 @@
         </div>
 
         <div class="bg-white rounded shadow p-4 text-center">
-          <p class="text-gray-500">Active Semesters</p>
-          <p class="text-2xl font-bold text-mccblue">{{ activeSemesters.length }}</p>
+          <p class="text-gray-500">Incomplete Grades</p>
+          <p class="text-2xl font-bold text-mccblue">{{ incompleteGrades ? incompleteGrades : "0"  }}</p>
         </div>
       </div>
     </div>
@@ -87,16 +91,14 @@ import { router } from '@inertiajs/vue3'
 const props = defineProps({
   counts: Object,
   grading: Object,
-  activeSemesters: Array,
+  activeSemesters: Number,
   complianceRate: Number,
   studentsChartOptions: Object,
   fullname: Object,
   username: Object,
 })
 
-
-const registrarName = ref('')
-const registrarId = ref('')
+const TOR_requests = ref(0)
 const studentCounts = ref({ total: 0 })
 const activeSemesters = ref([])
 const pendingRequests = ref([])
@@ -106,12 +108,9 @@ const loading = ref(true)
 const fetchRegistrarDashboard = async () => {
   try {
     const res = await axios.get('/registrar/dashboard')
-    registrarName.value = res.data.registrar.name
-    registrarId.value = res.data.registrar.id
-    studentCounts.value = res.data.studentCounts
+    TOR_requests.value = res.data.TOR_requests
     activeSemesters.value = res.data.activeSemesters
     pendingRequests.value = res.data.pendingRequests
-    complianceRate.value = res.data.complianceRate
   } catch (err) {
     console.error('Failed to load registrar dashboard:', err)
   } finally {
@@ -123,7 +122,8 @@ onMounted(() => {
   fetchRegistrarDashboard()
 })
 
-// Navigation functions
+
 const goToClasses = () => router.visit(`/classes`)
 const goToStudents = () => router.visit(`/students`)
+const goToTORRequests = () => router.visit(`/tor-requests`)
 </script>

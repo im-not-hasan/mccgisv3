@@ -236,18 +236,43 @@ class StudentsController extends Controller
                 } else {
                     $instructorName = "N/A";
                 }
-
+                
                 // Get grade for subject
-                $grade = DB::table('grades')
+                $midterm = DB::table('grades')
                     ->where('student_id', $studentId)
                     ->where('subject_id', $subj->id)
                     ->where('teacher_id', $teacherId)
-                    ->where('course', $course)
-                    ->where('year', $year)
-                    ->where('section', $section)
                     ->where('ay_id', $ay_id)
-                    ->where('submitted', 1)
+                    ->where('submitted', 0)
+                    ->value('midterm');
+
+                $final = DB::table('grades')
+                    ->where('student_id', $studentId)
+                    ->where('subject_id', $subj->id)
+                    ->where('teacher_id', $teacherId)
+                    ->where('ay_id', $ay_id)
+                    ->where('submitted', 0)
+                    ->value('final');
+
+                $overall = DB::table('grades')
+                    ->where('student_id', $studentId)
+                    ->where('subject_id', $subj->id)
+                    ->where('teacher_id', $teacherId)
+                    ->where('ay_id', $ay_id)
+                    ->where('submitted', 0)
                     ->value('overall');
+
+                if($overall<=0.00 || !$overall){
+                    if($final<=0.00 || !$final){
+                        $grade= $midterm;
+                    }
+                    else{
+                        $grade =$final;
+                    }
+                }
+                else{
+                    $grade=$overall;
+                }
 
                 $subjects[] = [
                     'code' => $subj->code,
@@ -301,7 +326,7 @@ class StudentsController extends Controller
             }
         }
 
-        //Log::info('Final subjects array to return:', [$subjects]);
+        Log::info('Final subjects array to return:', [$subjects]);
 
         return response()->json(['subjects' => $subjects]);
     }

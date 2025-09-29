@@ -122,6 +122,18 @@ class DashboardController extends Controller
             ]);
         }
 
+        public function registrarDashboard(Request $request)
+        {
+            $TOR_requests = DB::table('tor_requests')->count();
+            $activeSemesters = DB::table('ay')->where('display', 1)->pluck('semester')->toArray();
+            $pendingRequests = DB::table('tor_requests')->where('status','pending')->count();
+
+            return response()->json([
+                'TOR_requests' => $TOR_requests,
+                'activeSemesters' => $activeSemesters,
+                'pendingRequests' => $pendingRequests,
+            ]);
+        }
 
 
 

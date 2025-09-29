@@ -16,6 +16,7 @@ use App\Http\Controllers\GradeController;
 use App\Http\Controllers\GradeSheetController;
 use App\Http\Controllers\StudentImportExportController;
 use App\Http\Controllers\InstructorLoadImportController;
+use App\Http\Controllers\TORController;
 
 
 
@@ -190,7 +191,11 @@ Route::delete('/classes/{classId}/students/{studentId}', [ClassesController::cla
 
 // Registrar - View Subjects in Class
 Route::get('/classes/{id}/subjects', [ClassesController::class, 'getClassSubjects']);
-
+Route::get('/registrar/dashboard', [DashboardController::class, 'registrarDashboard']);
+Route::get('/tor-requests', function () {
+    return Inertia::render('TOR_Requests', [
+    ]);
+});
 
 
 
@@ -302,3 +307,12 @@ Route::get('/api/active-ay', function () {
 Route::get('/gradesheet/print', [GradeSheetController::class, 'print'])->name('gradesheet.print');
 
 
+// TOR
+// Student requests TOR
+Route::post('/tor/request', [TORController::class, 'requestTOR'])
+    ->name('tor.request');
+Route::get('/tor-requests/all', [TORController::class, 'allRequests']);
+Route::post('/tor-requests/{id}/update-status', [TORController::class, 'updateStatus']);
+Route::get('/tor-requests/{id}/student-info', [TORController::class, 'getStudentInfo']);
+Route::post('/tor-requests/save-student-info', [TORController::class, 'saveStudentInfo']);
+Route::get('/tor/print/{request_id}', [TORController::class, 'print'])->name('tor.print');
