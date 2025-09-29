@@ -22,8 +22,8 @@ class CustomLoginController extends Controller
             'Password'        => 'required|string',
             'recaptcha_token' => 'required|string',
         ]);
-        \Log::info('🔑 Site Key (from .env): ' . env('RECAPTCHA_SITE_KEY'));
-         \Log::info('🔑 Secret Key (from .env): ' . env('RECAPTCHA_SECRET_KEY'));
+        //\Log::info('🔑 Site Key (from .env): ' . env('RECAPTCHA_SITE_KEY'));
+        //\Log::info('🔑 Secret Key (from .env): ' . env('RECAPTCHA_SECRET_KEY'));
 
         // 🔑 Verify reCAPTCHA
         $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
