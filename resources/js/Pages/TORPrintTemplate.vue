@@ -12,7 +12,7 @@
     <!-- Foreground content -->
     <div class="relative z-10">
       <!-- Header image -->
-      <div class="flex justify-center mb-2 relative mt-[-200px]">
+      <div class="flex justify-center mb-2 relative ">
         <img src="/header.png" alt="MCC Header" class="w-full max-h-32 object-contain" />
       </div>
 
@@ -20,7 +20,7 @@
       <div class="mt-2 text-lg uppercase text-center" style="font-weight: 1000">Official Transcript of Records</div>
 
       <!-- Bio table -->
-      <table class="w-full border border-black text-[11px] border-collapse" style="margin-bottom: -10px;">
+      <table class="w-full border border-black text-[11px] border-collapse" style="margin-bottom: -11px;">
            <colgroup>
             <col style="width:65%;">
             <col style="width:10%;">
@@ -78,7 +78,6 @@
 
         <!-- Row 2 -->
       <table class="w-full border border-black text-[11px] border-collapse" style="margin-top: 9.5px">
-            <!-- tune widths if needed -->
             <col style="width:15%;">  <!-- left content (names / left labels) -->
             <col style="width:9%;">  <!-- course / small label cells -->
             <col style="width:10%;">  <!-- DOB / right block -->
@@ -125,7 +124,7 @@
               <div class="text-sm" style="margin-bottom: -10px;">{{ studentInfo.sex }}</div>
             </td>
             <td class="border border-black px-2 py-0">
-              <div class="text-sm text-right" style="margin-top: -20px;">High School S.Y. {{ studentInfo.highschool_sy }}</div>
+              <div class="text-sm text-right" style="margin-top: -22px;">High School S.Y. {{ studentInfo.highschool_sy }}</div>
               <div class="text-sm" style="margin-bottom: -10px;">{{ studentInfo.highschool_school }}</div>
             </td>
           </tr>
@@ -134,7 +133,7 @@
           <tr>
             <td class="border border-black px-2 py-0" colspan="3">
               <div class="text-sm leading-tight" style="margin-top: -15px;">Parent or Guardian</div>
-              <div class="leading-tight text-center" style="margin-bottom: -15px;">{{ studentInfo.guardian_name }}</div>
+              <div class="text-sm leading-tight text-center " style="margin-bottom: -15px;">{{ studentInfo.guardian_name }}</div>
             </td>
             <td class="border border-black px-2 py-0" colspan="1" >
               <div class="text-sm leading-tight text-right" style="margin-top: -15px;">Student's ID Number: {{ studentInfo.student_number }}</div>

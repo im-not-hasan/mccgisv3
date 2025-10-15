@@ -67,11 +67,16 @@ Route::get('/subjects', fn () => Inertia::render('Subjects'))->name('subjects');
 Route::get('/consultation', fn () => Inertia::render('Consultation'))->name('settings');
 Route::get('/generatereports', fn () => Inertia::render('GenerateReports'))->name('generatereports');
 Route::get('/settings', fn () => Inertia::render('Settings'))->name('settings');
+Route::get('/terms', function () {return inertia('Terms');});
 
 
 
 // Login and Logout
 Route::post('/custom-login', [CustomLoginController::class, 'login'])->name('custom.login');
+Route::post('/check-user-email', [CustomLoginController::class, 'checkUserEmail']);
+Route::post('/forgot-password', [CustomLoginController::class, 'forgotPassword']);
+Route::post('/verify-otp', [CustomLoginController::class, 'verifyOtp']);
+Route::post('/reset-password', [CustomLoginController::class, 'resetPassword']);
 
 Route::post('/logout', function () {
     Auth::logout();

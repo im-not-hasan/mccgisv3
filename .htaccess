@@ -1,31 +1,40 @@
+# ===============================================================
+# Laravel Root .htaccess — Secure + Works on Shared Hosts (Hostinger)
+# ===============================================================
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # Ensure the request is not already pointing to /public
+  RewriteCond %{REQUEST_URI} !^/public/
+  # Redirect everything into /public
   RewriteRule ^(.*)$ public/$1 [L]
-    RewriteEngine On
-    RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
-# --------------------------
-# Security hardening
-# --------------------------
+# ===============================================================
+# Security Hardening
+# ===============================================================
 
-# Deny access to hidden files (.env, .git, etc.)
+# 🔒 Deny access to hidden files (.env, .git, etc.)
 RedirectMatch 404 /\.(.*)$
 
-# Block sensitive Laravel files
-<FilesMatch "(artisan|server\.php|composer\.(json|lock)|package\.json|webpack\.mix\.js)">
+# 🔒 Block sensitive Laravel core files
+<FilesMatch "(artisan|server\.php|composer\.(json|lock)|package\.json|webpack\.mix\.js)$">
     Require all denied
 </FilesMatch>
 
-# Block access to vendor folder
-RedirectMatch 404 ^/vendor/.*
+# 🔒 Block storage and vendor folder access
+RedirectMatch 404 ^/(storage|vendor)/.*
 
-# Block storage folder
-RedirectMatch 404 ^/storage/.*
-
-# Disable directory browsing
+# 🔒 Disable directory browsing
 Options -Indexes
 
-
-
+# ===============================================================
+# Basic Security Headers (lightweight & compatible)
+# ===============================================================
+<IfModule mod_headers.c>
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "no-referrer"
+    Header always set X-Frame-Options "SAMEORIGIN"
+</IfModule>

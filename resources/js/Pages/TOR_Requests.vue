@@ -371,13 +371,33 @@ const saveStudentInfo = async () => {
   }
 }
 const handleImageUpload = (e) => {
-  const file = e.target.files[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = () => { studentInfo.value.picture = reader.result.split(',')[1] }
-    reader.readAsDataURL(file)
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // 🔹 Limit to JPEG/PNG only
+  const allowedTypes = ['image/jpeg', 'image/png'];
+  if (!allowedTypes.includes(file.type)) {
+    Swal.fire('Invalid File', 'Please upload only JPEG or PNG images.', 'warning');
+    e.target.value = ''; // reset input
+    return;
   }
-}
+
+  // 🔹 Limit size (max 2 MB)
+  const maxSize = 2 * 1024 * 1024;
+  if (file.size > maxSize) {
+    Swal.fire('File Too Large', 'Image must be less than 2 MB.', 'error');
+    e.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const base64 = reader.result.split(',')[1];
+    studentInfo.value.picture = base64;
+  };
+  reader.readAsDataURL(file);
+};
+
 
 const fetchSession = async () => {
   try {
