@@ -11,7 +11,6 @@
   RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
-
 # ===============================================================
 # Security Hardening
 # ===============================================================
@@ -30,7 +29,6 @@ RedirectMatch 404 ^/(storage|vendor)/.*
 # 🔒 Disable directory browsing
 Options -Indexes
 
-
 # ===============================================================
 # Security Headers (Enhanced and Scan-Ready)
 # ===============================================================
@@ -41,14 +39,12 @@ Options -Indexes
     Header always set Referrer-Policy "no-referrer"
     Header always set X-Frame-Options "SAMEORIGIN"
 
-    # ✅ Add Strict Transport Security (HSTS)
-    # Enforces HTTPS for one year across all subdomains
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    # ✅ Enforce HTTPS for one year across all subdomains (Strict Transport Security)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 
-    # ✅ Add Permissions Policy
-    # Controls what browser features your site can use
+    # ✅ Restrict browser permissions (Permissions Policy)
     Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), fullscreen=(self)"
 
-    # Optional: Content Security Policy (kept mild for compatibility)
+    # Optional: add CSP later if needed
     # Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/;"
 </IfModule>

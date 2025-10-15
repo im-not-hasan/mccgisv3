@@ -9,10 +9,10 @@
     # SECURITY HEADERS - MCCGISv3
     # ------------------------------------------
     <IfModule mod_headers.c>
-        # Enforce HTTPS with HSTS (Strict Transport Security)
-        Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # ✅ Enforce HTTPS with HSTS (Strict Transport Security)
+        Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 
-        # Limit browser permissions (Permissions Policy)
+        # ✅ Limit browser permissions (Permissions Policy)
         Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), fullscreen=(self)"
     </IfModule>
     # ------------------------------------------
