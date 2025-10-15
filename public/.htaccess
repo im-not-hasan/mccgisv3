@@ -35,3 +35,13 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+# ===============================================================
+# 🚫 Block direct access to /public folder
+# ===============================================================
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Deny direct access to anything under /public
+  RewriteCond %{REQUEST_URI} ^/public(/|$)
+  RewriteRule .* - [F,L]
+</IfModule>
