@@ -5,9 +5,13 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # Ensure the request is not already pointing to /public
+  # 🚫 Block direct access to /public folder
+  RewriteCond %{REQUEST_URI} ^/public(/|$)
+  RewriteRule .* - [F,L]
+
+  # ✅ Ensure the request is not already pointing to /public
   RewriteCond %{REQUEST_URI} !^/public/
-  # Redirect everything into /public
+  # Redirect everything else into /public
   RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
@@ -40,20 +44,11 @@ Options -Indexes
     Header always set X-Frame-Options "SAMEORIGIN"
 
     # ✅ Enforce HTTPS for one year across all subdomains (Strict Transport Security)
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 
     # ✅ Restrict browser permissions (Permissions Policy)
     Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), fullscreen=(self)"
 
-    # Optional: add CSP later if needed
+    # Optional: add CSP later if needed (for advanced protection)
     # Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/;"
-</IfModule>
-
-# ===============================================================
-# 🚫 Block direct access to /public folder
-# ===============================================================
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteCond %{REQUEST_URI} ^/public(/|$)
-  RewriteRule .* - [F,L]
 </IfModule>
