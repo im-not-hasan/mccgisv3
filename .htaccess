@@ -52,4 +52,3 @@ Options -Indexes
     # Optional: add CSP later if needed (for advanced protection)
     # Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/;"
 </IfModule>
- 
