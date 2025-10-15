@@ -1,50 +1,31 @@
-# ===============================================================
-# Laravel Root .htaccess — Secure + Works on Shared Hosts (Hostinger)
-# ===============================================================
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
-
-  # Ensure the request is not already pointing to /public
-  RewriteCond %{REQUEST_URI} !^/public/
-  # Redirect everything into /public
   RewriteRule ^(.*)$ public/$1 [L]
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
-# ===============================================================
-# Security Hardening
-# ===============================================================
+# --------------------------
+# Security hardening
+# --------------------------
 
-# 🔒 Deny access to hidden files (.env, .git, etc.)
+# Deny access to hidden files (.env, .git, etc.)
 RedirectMatch 404 /\.(.*)$
 
-# 🔒 Block sensitive Laravel core files
-<FilesMatch "(artisan|server\.php|composer\.(json|lock)|package\.json|webpack\.mix\.js)$">
+# Block sensitive Laravel files
+<FilesMatch "(artisan|server\.php|composer\.(json|lock)|package\.json|webpack\.mix\.js)">
     Require all denied
 </FilesMatch>
 
-# 🔒 Block storage and vendor folder access
-RedirectMatch 404 ^/(storage|vendor)/.*
+# Block access to vendor folder
+RedirectMatch 404 ^/vendor/.*
 
-# 🔒 Disable directory browsing
+# Block storage folder
+RedirectMatch 404 ^/storage/.*
+
+# Disable directory browsing
 Options -Indexes
 
-# ===============================================================
-# Security Headers (Enhanced and Scan-Ready)
-# ===============================================================
-<IfModule mod_headers.c>
-    # Basic protections
-    Header always set X-XSS-Protection "1; mode=block"
-    Header always set X-Content-Type-Options "nosniff"
-    Header always set Referrer-Policy "no-referrer"
-    Header always set X-Frame-Options "SAMEORIGIN"
 
-    # ✅ Enforce HTTPS for one year across all subdomains (Strict Transport Security)
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 
-    # ✅ Restrict browser permissions (Permissions Policy)
-    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), fullscreen=(self)"
-
-    # Optional: add CSP later if needed
-    # Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/;"
-</IfModule>
