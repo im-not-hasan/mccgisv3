@@ -364,9 +364,10 @@ watch(
   () => props.studentToEdit,
   async (student) => {
     if (props.editMode && student) {
+      await fetchSections()
+      await fetchAcademicYears()
       form.value = { ...student }
       isOpen.value = true
-
       if (student.regular == 0) {
         await fetchSubjects()
         await fetchExistingIrregSubjects(student.studid)
