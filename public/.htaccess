@@ -1,3 +1,14 @@
+# 🧱 Force deny specific files (case-insensitive)
+<FilesMatch "(?i)^(logo\.png|header\.png|watermark\.png)$">
+    Require all denied
+</FilesMatch>
+
+# 🔧 Force browsers to ignore cached versions (optional temporary rule)
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+</IfModule>
+
+
 # ===============================================================
 # Laravel Public/.htaccess — Secure + Hostinger Compatible
 # ===============================================================
