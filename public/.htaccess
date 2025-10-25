@@ -1,54 +1,39 @@
 # ===============================================================
-# Laravel Root .htaccess — Secure + Hostinger Compatible
+# Laravel Root .htaccess — Secure + Hostinger Compatible (Safe)
 # ===============================================================
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # 🚫 Block direct access to /public folder
-  RewriteCond %{REQUEST_URI} ^/public(/|$)
-  RewriteRule .* - [F,L]
-
-  # 🚫 Block manual requests containing "/public" in the URL
+  # 🚫 Block direct /public access (typed manually in browser)
   RewriteCond %{THE_REQUEST} "\s/public([/?#\s]|$)" [NC]
   RewriteRule ^ - [R=403,L]
 
-  # 🚫 Block direct access to index.php in root
+  # 🚫 Block direct /index.php access (typed manually)
   RewriteCond %{THE_REQUEST} "^[A-Z]{3,}\s/+index\.php[?\s]" [NC]
   RewriteRule ^index\.php$ - [R=403,L]
 
-  # ✅ Ensure the request is not already pointing to /public
+  # ✅ Redirect everything else INTO /public (but not twice)
   RewriteCond %{REQUEST_URI} !^/public/
-  # Redirect everything else into /public
   RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
 
 # ===============================================================
-# 🧱 Force deny specific files (case-insensitive)
+# 🧱 Deny specific sensitive image files
 # ===============================================================
 <FilesMatch "(?i)^(logo\.png|header\.png|watermark\.png)$">
     Require all denied
 </FilesMatch>
 
-# 🔧 Optional: prevent browser cache issues during testing
-<IfModule mod_headers.c>
-    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
-</IfModule>
-
-
 # ===============================================================
 # 🔒 Security Hardening
 # ===============================================================
-
-# Block sensitive files
 RedirectMatch 404 /\.(env|git|ht|DS_Store)
 RedirectMatch 404 /\.env\..*
 RedirectMatch 404 ^/(storage|vendor|bootstrap|resources|config)/.*
 
-# Disable directory browsing
 Options -Indexes
-
 
 # ===============================================================
 # 🛡️ Security Headers
