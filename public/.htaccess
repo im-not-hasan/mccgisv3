@@ -19,19 +19,16 @@
 </IfModule>
 
 # ===============================================================
-# 🧱 Smart image protection (Hostinger-safe)
+# 🧱 Strict block for sensitive images (Hostinger + LiteSpeed Safe)
 # ===============================================================
-# Allow images to load inside pages, but block manual address-bar hits
-<FilesMatch "(?i)^(logo\.png|header\.png|watermark\.png)$">
-  <If "%{HTTP_REFERER} == ''">
-    Require all denied
-  </If>
-</FilesMatch>
+<IfModule mod_rewrite.c>
+  RewriteEngine On
 
-# Explanation:
-# - If an image is loaded from your site (has a referer header), it's allowed ✅
-# - If someone opens it directly in the browser bar (no referer), it's denied 🚫
-
+  # Block direct manual requests for these image files
+  RewriteCond %{THE_REQUEST} "GET\s+/+(logo\.png|header\.png|watermark\.png)[\s?]" [NC]
+  RewriteCond %{HTTP_REFERER} !^https?://(www\.)?mccgradeinfo\.com [NC]
+  RewriteRule ^(logo\.png|header\.png|watermark\.png)$ - [R=403,L]
+</IfModule>
 
 # ===============================================================
 # 🔒 Security Hardening
