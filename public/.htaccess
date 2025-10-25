@@ -18,13 +18,16 @@
   RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
+# =========================================================================
+# 🧱 Deny sensitive image files ONLY if directly accessed from browser bar
+# =========================================================================
+<IfModule mod_rewrite.c>
+  RewriteCond %{THE_REQUEST} "GET\s/+logo\.png" [NC,OR]
+  RewriteCond %{THE_REQUEST} "GET\s/+header\.png" [NC,OR]
+  RewriteCond %{THE_REQUEST} "GET\s/+watermark\.png" [NC]
+  RewriteRule .* - [R=403,L]
+</IfModule>
 
-# ===============================================================
-# 🧱 Deny specific sensitive image files
-# ===============================================================
-<FilesMatch "(?i)^(logo\.png|header\.png|watermark\.png)$">
-    Require all denied
-</FilesMatch>
 
 # ===============================================================
 # 🔒 Security Hardening
