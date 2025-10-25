@@ -5,6 +5,10 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
+  # 🚫 Block direct access to /public folder
+  RewriteCond %{REQUEST_URI} ^/public(/|$)
+  RewriteRule .* - [F,L]
+  
   # 🚫 Block direct access to /public folder and its contents
   RewriteCond %{THE_REQUEST} "\s/public/([^\s]*)" [NC]
   RewriteRule ^ - [F,L]
