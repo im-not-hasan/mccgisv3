@@ -1,15 +1,15 @@
 # ===============================================================
-# Laravel Root .htaccess — Secure + Hostinger Compatible (Safe)
+# Laravel Root .htaccess — Secure + Hostinger Compatible (FINAL)
 # ===============================================================
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # 🚫 Block direct /public access (typed manually in browser)
+  # 🚫 Block direct /public access
   RewriteCond %{THE_REQUEST} "\s/public([/?#\s]|$)" [NC]
   RewriteRule ^ - [R=403,L]
 
-  # 🚫 Block direct /index.php access (typed manually)
+  # 🚫 Block direct /index.php access
   RewriteCond %{THE_REQUEST} "^[A-Z]{3,}\s/+index\.php[?\s]" [NC]
   RewriteRule ^index\.php$ - [R=403,L]
 
@@ -18,15 +18,19 @@
   RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
-# =========================================================================
-# 🧱 Deny sensitive image files ONLY if directly accessed from browser bar
-# =========================================================================
-<IfModule mod_rewrite.c>
-  RewriteCond %{THE_REQUEST} "GET\s/+logo\.png" [NC,OR]
-  RewriteCond %{THE_REQUEST} "GET\s/+header\.png" [NC,OR]
-  RewriteCond %{THE_REQUEST} "GET\s/+watermark\.png" [NC]
-  RewriteRule .* - [R=403,L]
-</IfModule>
+# ===============================================================
+# 🧱 Smart image protection (Hostinger-safe)
+# ===============================================================
+# Allow images to load inside pages, but block manual address-bar hits
+<FilesMatch "(?i)^(logo\.png|header\.png|watermark\.png)$">
+  <If "%{HTTP_REFERER} == ''">
+    Require all denied
+  </If>
+</FilesMatch>
+
+# Explanation:
+# - If an image is loaded from your site (has a referer header), it's allowed ✅
+# - If someone opens it directly in the browser bar (no referer), it's denied 🚫
 
 
 # ===============================================================
