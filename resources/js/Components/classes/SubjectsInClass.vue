@@ -33,7 +33,16 @@
                   <td class="px-2 sm:px-4 py-2">{{ subject.code }}</td>
                   <td class="px-2 sm:px-4 py-2">{{ subject.title }}</td>
                   <td class="px-2 sm:px-4 py-2">{{ subject.instructor}}</td>
-                  <td class="px-2 sm:px-4 py-2"> Not submitted</td>
+                  <td class="px-2 sm:px-4 py-2 text-center">
+                    <span
+                      :class="{
+                        'text-green-600 font-semibold': subject.submitted == 1,
+                        'text-red-600 italic font-bold': subject.submitted != 1
+                      }"
+                    >
+                      {{ subject.submitted == 1 ? 'Submitted' : 'Not Submitted' }}
+                    </span>
+                  </td>
                   <td class="px-2 sm:px-4 py-2 text-center space-x-2">
                   <!-- <button class="text-green-600 select-none hover:underline" @click.stop="viewGradeSheet(classItem)">View </button> -->
                   <button class="text-blue-600 select-none hover:underline" @click="printGradeSheet(subject, selectedClass)">Print</button>

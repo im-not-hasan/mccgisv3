@@ -14,7 +14,9 @@ class DashboardController extends Controller
             $level = Session::get('level');
             $username = Session::get('username');
             $counts = [];
-
+            $activeAy = DB::table('ay')
+                ->where('display',1)
+                ->first();
             // 🟡 1. Get active semesters
             $activeSemesters = DB::table('ay')
                 ->where('display', 1)
@@ -67,8 +69,83 @@ class DashboardController extends Controller
                 // $counts['students'] = DB::table('student')->count();
             
 
-            // 📝 3. Grading Compliance (TODO: Implement grading completeness logic here)
-            // $grading = ['complete' => 0, 'incomplete' => 0];
+            // 📝 3. Grading Compliance
+            $complete = 0;
+            $incomplete = 0;
+
+            if ($level === 'admin' || $level === 'registrar') {
+                $classes = DB::table('class')->get();
+                $activeAy = DB::table('ay')->where('display', 1)->first();
+
+                foreach ($classes as $class) {
+                    // Get all subjects assigned to this class in the active AY
+                    $subjects = DB::table('assignments')
+                        ->where('course', $class->course)
+                        ->where('year', $class->year)
+                        ->where('section', $class->section)
+                        ->where('ay_id', $activeAy->id)
+                        ->pluck('subject_id');
+
+                    if ($subjects->isEmpty()) {
+                        // No subjects → skip counting this class
+                        continue;
+                    }
+
+                    // Count how many subjects have all grades submitted (submitted=1)
+                    $submittedCount = DB::table('grades')
+                        ->whereIn('subject_id', $subjects)
+                        ->where('course', $class->course)
+                        ->where('year', $class->year)
+                        ->where('section', $class->section)
+                        ->where('ay_id', $activeAy->id)
+                        ->where('submitted', 1)
+                        ->distinct('subject_id')
+                        ->count('subject_id');
+
+                    // ✅ Only count class as complete if ALL subjects submitted
+                    if ($submittedCount === $subjects->count()) {
+                        $complete++;
+                    } else {
+                        $incomplete++;
+                    }
+                }
+            }
+            elseif ($level === 'teacher') {
+                // 👩‍🏫 Teacher-specific compliance
+                $teacherRecord = DB::table('teacher')->where('teachid', $username)->first();
+
+                if ($teacherRecord) {
+                    $teacherId = $teacherRecord->id;
+
+                    // Get all subjects assigned to this teacher for active AY
+                    $assignedSubjects = DB::table('assignments')
+                        ->where('teacher_id', $teacherId)
+                        ->where('ay_id', $activeAy->id)
+                        ->get();
+
+                    foreach ($assignedSubjects as $subject) {
+                        $isSubmitted = DB::table('grades')
+                            ->where('subject_id', $subject->subject_id)
+                            ->where('teacher_id', $teacherId)
+                            ->where('course', $subject->course)
+                            ->where('year', $subject->year)
+                            ->where('section', $subject->section)
+                            ->where('ay_id', $activeAy->id)
+                            ->where('submitted', 1)
+                            ->exists();
+
+                        if ($isSubmitted) {
+                            $complete++;
+                        } else {
+                            $incomplete++;
+                        }
+                    }
+                }
+            }
+
+            $total = $complete + $incomplete;
+            $complianceRate = $total > 0 ? round(($complete / $total) * 100, 2) : 100;
+
 
             // 📊 4. Students per Course (for chart)
             $studentsPerCourse = DB::table('student')
@@ -85,7 +162,11 @@ class DashboardController extends Controller
             return response()->json([
                 'counts' => $counts,
                 'activeSemesters' => $activeSemesters,
-                // 'grading' => $grading, // placeholder for future
+                'grading' => [
+                    'complete' => $complete,
+                    'incomplete' => $incomplete,
+                    'complianceRate' => $complianceRate,
+                ],
                 'studentsPerCourse' => $studentsPerCourse,
             ]);
         }

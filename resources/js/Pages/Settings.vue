@@ -47,7 +47,8 @@
       <!-- Existing Admin AcademicYearList -->
       <AcademicYearList class="select-none" v-if="userLevel === 'admin'" />
       <CurriculumList v-if="userLevel === 'admin'" />
-
+      <LoginLogs v-if="userLevel === 'admin'" />
+      
     </div>
 
   </DashboardLayout>
@@ -60,6 +61,7 @@ import DashboardLayout from '@/Components/dashboard/DashboardLayout.vue'
 import AcademicYearList from '@/Components/settings/AcademicYearList.vue'
 import ChangePasswordForm from '@/Components/settings/ChangePasswordForm.vue'
 import CurriculumList from '@/Components/settings/CurriculumList.vue'
+import LoginLogs from '@/Components/settings/LoginLogs.vue'
 
 const fullname = ref('')
 const userLevel = ref('')

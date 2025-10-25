@@ -2,7 +2,7 @@
   <div class="p-4">
     <!-- Header Summary -->
     <div class="mb-4">
-      <h1 class="text-2xl font-bold text-mccblue">My Subjects Overview</h1>
+      <h1 class="text-2xl font-bold text-mccblue">Subjects Overview</h1>
       <p class="text-gray-600 mt-1">
         You are handling {{ totalSubjects }} unique subject<span v-if="totalSubjects !== 1">s</span>
         across {{ groupedClasses.length }} class<span v-if="groupedClasses.length !== 1">es</span>.

@@ -17,8 +17,8 @@ use App\Http\Controllers\GradeSheetController;
 use App\Http\Controllers\StudentImportExportController;
 use App\Http\Controllers\InstructorLoadImportController;
 use App\Http\Controllers\TORController;
-
-
+use App\Http\Controllers\BackupController;
+use App\Http\Controllers\LoginLogController;
 
 
 
@@ -65,7 +65,6 @@ Route::get('/instructors', fn () => Inertia::render('Instructors'))->name('instr
 Route::get('/classes', fn () => Inertia::render('Classes'))->name('classes');
 Route::get('/subjects', fn () => Inertia::render('Subjects'))->name('subjects');
 Route::get('/consultation', fn () => Inertia::render('Consultation'))->name('settings');
-Route::get('/generatereports', fn () => Inertia::render('GenerateReports'))->name('generatereports');
 Route::get('/settings', fn () => Inertia::render('Settings'))->name('settings');
 Route::get('/terms', function () {return inertia('Terms');});
 
@@ -78,13 +77,7 @@ Route::post('/forgot-password', [CustomLoginController::class, 'forgotPassword']
 Route::post('/verify-otp', [CustomLoginController::class, 'verifyOtp']);
 Route::post('/reset-password', [CustomLoginController::class, 'resetPassword']);
 
-Route::post('/logout', function () {
-    Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    return redirect()->to('/');
-})->name('logout');
-
+Route::post('/logout', [CustomLoginController::class, 'logout'])->name('logout');
 
 
 // Dashboard Counts
@@ -274,6 +267,9 @@ Route::post('/curriculums/toggle-display', [SettingsController::class, 'toggleCu
 Route::delete('/curriculums/{id}', [SettingsController::class, 'deleteCurriculum']);
 
 
+// Logs for Admin
+Route::get('/admin/login-logs', [LoginLogController::class, 'index']);
+
 
 
 
@@ -285,10 +281,10 @@ return Inertia::render('GradeEntry');
 
 // Fetch students and existing grades for a class-subject
 Route::get('/grades/{subject_id}/{course}/{year}/{section}', [GradeController::class, 'getGrades']);
-
+Route::get('/finalgrades/{subject_id}/{course}/{year}/{section}', [GradeController::class, 'getFinalGrades']);
 // Save as draft (temporary save)
 Route::post('/grades/save', [GradeController::class, 'saveGrades'])->name('grades.save');
-
+Route::post('/finalgrades/save', [GradeController::class, 'saveFinalGrades'])->name('grades.save');
 // Submit final grades (locked)
 Route::post('/grades/submit', [GradeController::class, 'submitGrades']);
 
@@ -321,3 +317,10 @@ Route::post('/tor-requests/{id}/update-status', [TORController::class, 'updateSt
 Route::get('/tor-requests/{id}/student-info', [TORController::class, 'getStudentInfo']);
 Route::post('/tor-requests/save-student-info', [TORController::class, 'saveStudentInfo']);
 Route::get('/tor/print/{request_id}', [TORController::class, 'print'])->name('tor.print');
+
+
+Route::get('/pukcabbd', function () {
+    return Inertia::render('Backup');
+})->name('backup.page');
+Route::get('/ldpukcabbd', [BackupController::class, 'download'])
+    ->name('backup.download');

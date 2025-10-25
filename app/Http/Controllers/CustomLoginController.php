@@ -54,35 +54,28 @@ class CustomLoginController extends Controller
         // 🔹 Check password
         $info = password_get_info($user->password);
         $isHashed = $info['algoName'] !== 'unknown';
-        if ($isHashed) {
-            if (!Hash::check($request->Password, $user->password)) {
-                $attempts = Session::get('login_attempts', 3) - 1;
-                Session::put('login_attempts', $attempts);
-                if ($attempts <= 0) {
-                    $lockoutUntil = now()->addSeconds(60);
-                    Session::put('lockout_time', $lockoutUntil);
-                    return response()->json([
-                        'error' => 'locked',
-                        'lockout_expires_at' => $lockoutUntil->toISOString(),
-                    ], 429);
-                }
-                return response()->json(['error' => 'wrong_password', 'attempts' => $attempts], 401);
+        $passwordCorrect = $isHashed
+            ? Hash::check($request->Password, $user->password)
+            : $request->Password === $user->password;
+
+        if (!$passwordCorrect) {
+            $attempts = Session::get('login_attempts', 3) - 1;
+            Session::put('login_attempts', $attempts);
+            if ($attempts <= 0) {
+                $lockoutUntil = now()->addSeconds(60);
+                Session::put('lockout_time', $lockoutUntil);
+                $this->logAttempt($request, 'failed', $request->Username, $user->level, 'Too many attempts');
+                return response()->json([
+                    'error' => 'locked',
+                    'lockout_expires_at' => $lockoutUntil->toISOString(),
+                ], 429);
             }
-        } else {
-            if ($request->Password !== $user->password) {
-                $attempts = Session::get('login_attempts', 3) - 1;
-                Session::put('login_attempts', $attempts);
-                if ($attempts <= 0) {
-                    $lockoutUntil = now()->addSeconds(60);
-                    Session::put('lockout_time', $lockoutUntil);
-                    return response()->json([
-                        'error' => 'locked',
-                        'lockout_expires_at' => $lockoutUntil->toISOString(),
-                    ], 429);
-                }
-                return response()->json(['error' => 'wrong_password', 'attempts' => $attempts], 401);
-            }
-            // Upgrade legacy plain password to hash
+            $this->logAttempt($request, 'failed', $request->Username, $user->level, 'Wrong password');
+            return response()->json(['error' => 'wrong_password', 'attempts' => $attempts], 401);
+        }
+
+        // 🔹 Upgrade legacy plain password to hash
+        if (!$isHashed) {
             $user->password = Hash::make($request->Password);
             $user->save();
         }
@@ -90,12 +83,6 @@ class CustomLoginController extends Controller
         // 🔹 Reset attempts if user passed
         Session::forget('lockout_time');
         Session::put('login_attempts', 3);
-
-        // 🔹 Create session
-        Session::put('fullname', $user->fullname);
-        Session::put('level', $user->level);
-        Session::put('user_id', $user->id ?? null);
-        Session::put('username', $user->username);
 
         // 🔹 Fetch email (based on user level)
         $email = null;
@@ -238,7 +225,18 @@ class CustomLoginController extends Controller
                     'reset_token' => $token,
                     'message' => 'OTP verified. You may now reset your password.'
                 ]);
-            }
+            }   
+
+            // ✅ Session creation moved here (fixes OTP bypass)
+            $user = DB::table('login')->where('username', $req->username)->first();
+            Session::put('fullname', $user->fullname);
+            Session::put('level', $user->level);
+            Session::put('user_id', $user->id ?? null);
+            Session::put('username', $user->username);
+            $req->session()->regenerate(); // ✅ Fix session fixation
+
+            $this->logAttempt($req, 'login', $user->username, $user->level, 'Successful login via OTP');
+
 
             // 🔹 Default: login flow → redirect dashboard
             return response()->json([
@@ -291,5 +289,40 @@ class CustomLoginController extends Controller
         Cache::forget('reset_token_' . $req->username);
 
         return response()->json(['success' => true, 'message' => 'Password successfully reset.']);
+    }
+
+    // ------------------------------------------------------------------------
+    // 🔹 Logout (logs + proper CSRF rotation)
+    // ------------------------------------------------------------------------
+    public function logout(Request $req)
+    {
+        $this->logAttempt(
+            $req,
+            'logout',
+            Session::get('username'),
+            Session::get('level'),
+            'User logged out'
+        );
+
+        $req->session()->invalidate();
+        $req->session()->regenerateToken();
+
+        return redirect('/')->with('success', 'Logged out successfully.');
+    }
+
+    // ------------------------------------------------------------------------
+    // 🔹 Helper: unified log function
+    // ------------------------------------------------------------------------
+    private function logAttempt(Request $request, string $event, ?string $username = null, ?string $level = null, ?string $note = null)
+    {
+        DB::table('login_logs')->insert([
+            'user_name'  => $username,
+            'user_level' => $level,
+            'event'      => $event,
+            'ip_address' => $request->ip(),
+            'user_agent' => substr($request->header('User-Agent') ?? '', 0, 255),
+            'meta'       => $note ? json_encode(['note' => $note]) : null,
+            'created_at' => now(),
+        ]);
     }
 }

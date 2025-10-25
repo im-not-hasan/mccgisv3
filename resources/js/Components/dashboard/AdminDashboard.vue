@@ -66,7 +66,7 @@
 
     <!-- Gauge Chart Dummy -->
     <div class="flex flex-col items-center order-2 md:order-none">
-      <v-chart :option="dummyComplianceChartOptions" class="mx-auto h-48 md:w-48" />
+      <v-chart :option="ComplianceChart" class="mx-auto h-48 md:w-48" />
 
       <!-- CTA -->
       <button @click="goToIncompleteGrades"
@@ -89,74 +89,70 @@
 
   </div>
 </template>
-
 <script setup>
 import CardSpotlight from '@/Components/InspiraUI/CardSpotlight.vue'
 import { router } from '@inertiajs/vue3'
-
-// ✅ Import ECharts core and gauge chart type
+import { ref, watch, onMounted } from 'vue'
 import * as echarts from 'echarts/core'
 import { GaugeChart, BarChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { TitleComponent, TooltipComponent, GridComponent, LegendComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 
-// Register required chart types and components
-echarts.use([
-  GaugeChart,
-  BarChart,
-  CanvasRenderer,
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent,
-])
+echarts.use([GaugeChart, BarChart, CanvasRenderer, TitleComponent, TooltipComponent, GridComponent, LegendComponent])
 
 const props = defineProps({
   counts: Object,
   grading: Object,
   activeSemesters: Array,
-  complianceRate: Number,
   studentsChartOptions: Object,
 })
 
-const dummyComplianceChartOptions = {
-  series: [{
-    type: 'gauge',
-    startAngle: 90,
-    endAngle: -270,
-    radius: '100%',
-    progress: {
-      show: true,
-      overlap: false,
-      roundCap: true,
-      clip: false,
-      itemStyle: {
-        color: '#22c55e', // ✅ green progress bar
-      },
-    },
-    axisLine: {
-      lineStyle: {
-        width: 18,
-        color: [[1, '#e5e7eb']], // ✅ gray background for incomplete portion
-      },
-    },
-    pointer: { show: false },
-    axisTick: { show: false },
-    splitLine: { show: false },
-    axisLabel: { show: false },
-    data: [{ value: 100 }], // dummy 75% value
-    detail: {
-      valueAnimation: true,
-      formatter: '{value}%',
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#0f172a',
-      offsetCenter: [0, 0], // ✅ centers text
-    },
-  }],
-}
 
+const ComplianceChart = ref({
+  series: [
+    {
+      type: 'gauge',
+      startAngle: 90,
+      endAngle: -270,
+      radius: '100%',
+      progress: {
+        show: true,
+        overlap: false,
+        roundCap: true,
+        clip: false,
+        itemStyle: { color: '#22c55e' },
+      },
+      axisLine: {
+        lineStyle: { width: 18, color: [[1, '#e5e7eb']] },
+      },
+      pointer: { show: false },
+      axisTick: { show: false },
+      splitLine: { show: false },
+      axisLabel: { show: false },
+      data: [{ value: 0 }],
+      detail: {
+        valueAnimation: true,
+        formatter: '{value}%',
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#0f172a',
+        offsetCenter: [0, 0],
+      },
+    },
+  ],
+})
+
+
+watch(
+  () => props.grading?.complianceRate,
+  (newVal) => {
+    if (newVal !== undefined && newVal !== null) {
+      ComplianceChart.value.series[0].data[0].value = Number(newVal)
+    }
+  },
+  { immediate: true } 
+)
 
 // Nav functions
 const goToSubjects = () => router.visit(`/subjects`)
@@ -167,7 +163,6 @@ const goToIncompleteGrades = () => router.visit(`/grades/incomplete`)
 </script>
 
 <script>
-// ✅ Register <v-chart> locally
 export default {
   components: {
     'v-chart': VChart,

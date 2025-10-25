@@ -243,7 +243,6 @@ class StudentsController extends Controller
                     ->where('subject_id', $subj->id)
                     ->where('teacher_id', $teacherId)
                     ->where('ay_id', $ay_id)
-                    ->where('submitted', 0)
                     ->value('midterm');
 
                 $final = DB::table('grades')
@@ -251,7 +250,6 @@ class StudentsController extends Controller
                     ->where('subject_id', $subj->id)
                     ->where('teacher_id', $teacherId)
                     ->where('ay_id', $ay_id)
-                    ->where('submitted', 0)
                     ->value('final');
 
                 $overall = DB::table('grades')
@@ -259,7 +257,6 @@ class StudentsController extends Controller
                     ->where('subject_id', $subj->id)
                     ->where('teacher_id', $teacherId)
                     ->where('ay_id', $ay_id)
-                    ->where('submitted', 0)
                     ->value('overall');
 
                 if($overall<=0.00 || !$overall){

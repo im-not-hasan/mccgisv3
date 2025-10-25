@@ -102,16 +102,6 @@
     </template>
   </SidebarLink>
 
-  <SidebarLink name="Generate Reports" href="/generatereports">
-    <template #icon>
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 17v-4h6v4m-3-4v-4
-                 M4 7h16M4 3h16M4 21h16" />
-      </svg>
-    </template>
-  </SidebarLink>
-
   <SidebarLink name="Settings" href="/settings">
     <template #icon>
       <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

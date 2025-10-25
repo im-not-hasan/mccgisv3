@@ -200,6 +200,9 @@ class InstructorsController extends Controller
 
         public function getAssignments($teacher_id)
         {
+            $ay = DB::table('ay')
+            ->where('display',1)
+            ->first();
             $assignments = DB::table('assignments')
                 ->join('subject', 'assignments.subject_id', '=', 'subject.id')
                 ->select(
@@ -211,6 +214,7 @@ class InstructorsController extends Controller
                     'assignments.section'
                 )
                 ->where('assignments.teacher_id', $teacher_id)
+                ->where('assignments.ay_id', $ay->id)
                 ->get();
 
             return response()->json($assignments);

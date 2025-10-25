@@ -64,18 +64,18 @@
       <!-- 📊 Quick Stats -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded shadow p-4 text-center">
-          <p class="text-gray-500">Pending Requests</p>
+          <p class="text-gray-500">Pending TOR Requests</p>
           <p class="text-2xl font-bold text-orange-500">{{ pendingRequests }}</p>
         </div>
 
         <div class="bg-white rounded shadow p-4 text-center">
           <p class="text-gray-500">Compliance Rate</p>
-          <p class="text-2xl font-bold text-green-500">{{ complianceRate }}%</p>
+          <p class="text-2xl font-bold text-green-500">{{ grading.complianceRate }}%</p>
         </div>
 
         <div class="bg-white rounded shadow p-4 text-center">
-          <p class="text-gray-500">Incomplete Grades</p>
-          <p class="text-2xl font-bold text-mccblue">{{ incompleteGrades ? incompleteGrades : "0"  }}</p>
+          <p class="text-gray-500">Classes with Incomplete Grades</p>
+          <p class="text-2xl font-bold text-mccblue">{{ grading.incomplete }}</p>
         </div>
       </div>
     </div>
@@ -92,7 +92,6 @@ const props = defineProps({
   counts: Object,
   grading: Object,
   activeSemesters: Number,
-  complianceRate: Number,
   studentsChartOptions: Object,
   fullname: Object,
   username: Object,

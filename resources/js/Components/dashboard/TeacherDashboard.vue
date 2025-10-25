@@ -20,7 +20,7 @@
 
     <div v-else>
       <!-- Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-6 mb-6">
          <CardSpotlight
           label="My Subjects"
           :count="counts.subjects || 0"
@@ -41,26 +41,18 @@
 
         <CardSpotlight
           label="Consultations"
-          count="-"
+          :count="counts.consultations || 0"
           iconName="grades"
           :useSvg="true"
           @click="goToConsultation"
           class="cursor-pointer"
         />
 
-        <CardSpotlight
-          label="My Performance"
-          count="-"
-          iconName="grades"
-          :useSvg="true"
-          @click="goToSettings"
-          class="cursor-pointer"
-        />
       </div>
 
       <!-- 📝 Grading Compliance Panel -->
       <div class="bg-white rounded shadow p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-4">Grading Compliance</h2>
+        <h2 class="text-lg font-semibold mb-4">My Grading Compliance</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <p class="text-gray-500">Classes with Complete Grades</p>
@@ -72,13 +64,17 @@
           </div>
           <div>
             <p class="text-gray-500">% Fully Graded</p>
-            <p class="text-xl font-bold">{{ complianceRate }}%</p>
+            <p class="text-xl font-bold">{{ grading.complianceRate }}%</p>
           </div>
         </div>
 
         <!-- Progress Bar -->
-        <div class="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
-          <div class="bg-mccblue h-3" :style="{ width: complianceRate + '%' }"></div>
+        <div class="w-full bg-gray-300 rounded-full h-3 overflow-hidden relative">
+          <div
+            class="h-3 rounded-full transition-all duration-1000 ease-out"
+            :class="barColor"
+            :style="{ width: animatedRate + '%' }"
+          ></div>
         </div>
 
         <!-- CTA -->
@@ -95,7 +91,7 @@
 <script setup>
 import { router } from '@inertiajs/vue3'
 import CardSpotlight from '@/Components/InspiraUI/CardSpotlight.vue'
-import { toRefs } from 'vue'
+import { ref, watch, computed} from 'vue'
 
 const props = defineProps({
   counts: Object,
@@ -107,6 +103,25 @@ const props = defineProps({
     default: false,
   },
 })
+
+const barColor = computed(() => {
+  const rate = animatedRate.value
+  if (rate < 50) return 'bg-red-500'
+  if (rate < 80) return 'bg-yellow-400'
+  return 'bg-green-500'
+})
+
+const animatedRate = ref(0)
+watch(
+  () => props.grading.complianceRate,
+  (newVal) => {
+    animatedRate.value = 0
+    setTimeout(() => {
+      animatedRate.value = Number(newVal) || 0
+    }, 100) // small delay to trigger animation
+  },
+  { immediate: true }
+)
 
 // Nav functions
 const goToClasses = () => router.visit('/classes')

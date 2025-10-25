@@ -217,8 +217,7 @@ class ClassesController extends Controller
 
 
     //Registrar's Subject View
-    public function getClassSubjects($classId)
-    {
+    public function getClassSubjects($classId){
         try {
             // Find class
             $class = DB::table('class')->where('id', $classId)->first();
@@ -226,18 +225,14 @@ class ClassesController extends Controller
                 return response()->json(['message' => 'Class not found'], 404);
             }
 
-            // Get active AY
+            // Get active AY and Curriculum
             $ay = DB::table('ay')->where('display', 1)->first();
-            if (!$ay) {
-                return response()->json(['message' => 'Academic year not found'], 404);
+            $curriculum = DB::table('curriculums')->where('display', 1)->first();
+            if (!$ay || !$curriculum) {
+                return response()->json(['message' => 'Missing active AY or Curriculum'], 404);
             }
 
-            // Get active curriculum
-            $curriculum = DB::table('curriculums')
-            ->where('display',1)
-            ->first();
-
-            // Fetch subjects for the class, join assignments + teacher
+            // Fetch subjects and join assignments, teacher, and grades
             $subjects = DB::table('subject')
                 ->leftJoin('assignments', function ($join) use ($class, $ay) {
                     $join->on('subject.id', '=', 'assignments.subject_id')
@@ -245,33 +240,38 @@ class ClassesController extends Controller
                         ->where('assignments.year', $class->year)
                         ->where('assignments.section', $class->section)
                         ->where('assignments.ay_id', $ay->id);
-                        
                 })
                 ->leftJoin('teacher', 'assignments.teacher_id', '=', 'teacher.id')
+                ->leftJoin('grades', function ($join) use ($class, $ay) {
+                    $join->on('grades.subject_id', '=', 'subject.id')
+                        ->where('grades.course', $class->course)
+                        ->where('grades.year', $class->year)
+                        ->where('grades.section', $class->section)
+                        ->where('grades.ay_id', $ay->id);
+                })
                 ->select(
                     'subject.id',
                     'subject.code',
                     'subject.title',
                     'assignments.teacher_id',
                     'assignments.ay_id',
-                    DB::raw("COALESCE(CONCAT(teacher.fname, ' ', teacher.lname), 'Unassigned') as instructor")
-                    
+                    DB::raw("COALESCE(CONCAT(teacher.fname, ' ', teacher.lname), 'Unassigned') as instructor"),
+                    DB::raw("MAX(grades.submitted) as submitted")
                 )
                 ->where('subject.course', $class->course)
                 ->where('subject.year', $class->year)
-                ->where('subject.semester', $ay->semester) 
+                ->where('subject.semester', $ay->semester)
                 ->where('subject.curriculum', $curriculum->curriculum)
+                ->groupBy('subject.id', 'subject.code', 'subject.title', 'assignments.teacher_id', 'assignments.ay_id', 'teacher.fname', 'teacher.lname')
                 ->get();
-            
-                
-            //Log::info('Returning subjects in JSON response', ['subjects' => $subjects]);
-            return response()->json(['subjects' => $subjects]);
 
+            return response()->json(['subjects' => $subjects]);
         } catch (\Exception $e) {
             Log::error('Error fetching class subjects', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Failed to fetch subjects'], 500);
         }
     }
+
 
 
 

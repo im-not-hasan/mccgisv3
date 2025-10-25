@@ -136,7 +136,7 @@ const fetchCounts = async () => {
     const res = await axios.get('/dashboard-counts')
     counts.value = res.data.counts || {}
     activeSemesters.value = res.data.activeSemesters || []
-    grading.value = res.data.grading || { complete: 0, incomplete: 0 }
+    grading.value = res.data.grading || { complete: 0, incomplete: 0, complianceRate: 0}
     studentsPerCourse.value = res.data.studentsPerCourse || []
   } catch (err) {
     console.error('Error:', err)

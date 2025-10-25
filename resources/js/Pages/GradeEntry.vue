@@ -5,7 +5,7 @@
       <!-- Subject Code -->
       <div class="bg-blue-100 text-mcclightblue rounded-md p-4 shadow-md flex flex-col justify-between">
         <div class="text-xl text-mccblue font-bold">Subject Code: {{ subject }}</div>
-        <div class="text-md font-bold">Description here</div>
+        <div class="text-md font-bold"></div>
       </div>
 
       <!-- Course-Year -->
@@ -47,6 +47,7 @@
             <th :colspan="quizCount + 3" class="bg-gray-300 border p-2">
               QUIZZES
               <button
+                v-if="!isSubmitted"
                 @click="addQuizColumn"
                 class="ml-2 bg-green-500 text-white px-2 py-0.5 rounded text-xs"
                 title="Add Quiz Column"
@@ -54,6 +55,7 @@
                 +
               </button>
               <button
+                v-if="!isSubmitted"
                 @click="removeQuizColumn"
                 class="ml-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs"
                 title="Remove Quiz Column"
@@ -67,6 +69,7 @@
             <th :colspan="attendanceCount + 3" class="bg-gray-300 border p-2">
               ATTENDANCE
               <button
+                v-if="!isSubmitted"
                 @click="addAttendanceColumn"
                 class="ml-2 bg-green-500 text-white px-2 py-0.5 rounded text-xs"
                 title="Add Attendance Column"
@@ -74,6 +77,7 @@
                 +
               </button>
               <button
+                v-if="!isSubmitted"
                 @click="removeAttendanceColumn"
                 class="ml-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs"
                 title="Remove Attendance Column"
@@ -93,7 +97,7 @@
             <th
               v-for="n in quizCount"
               :key="'q-label-'+n"
-              class="bg-blue-200 border p-1 text-center sticky top-0 z-30"
+              class="bg-blue-200 border p-1 text-center sticky top-0 z-30"  :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }"
             >
               Q{{ n }}
             </th>
@@ -104,7 +108,7 @@
             <th
               v-for="n in attendanceCount"
               :key="'a-label-'+n"
-              class="bg-blue-200 border p-1 text-center sticky top-0 z-30"
+              class="bg-blue-200 border p-1 text-center sticky top-0 z-30"  :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }"
             >
               A{{ n }}
             </th>
@@ -112,12 +116,12 @@
             <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
             <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">15%</th>
 
-            <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30">100</th>
+            <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30"  :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">100</th>
             <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
             <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">15%</th>
 
-            <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30">PRELIM SCORE</th>
-            <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30">MIDTERM SCORE</th>
+            <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">PRELIM SCORE</th>
+            <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">MIDTERM SCORE</th>
             <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">TOTAL</th>
             <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
             <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">40%</th>
@@ -133,13 +137,15 @@
             <td
               v-for="(hps, i) in hpsQuizzes"
               :key="'hps-quiz-'+i"
-              class="border p-1 bg-blue-200 sticky top-8 z-30"
+              class="border p-1 bg-blue-200 sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }"
             >
               <input
                 v-model.number="hpsQuizzes[i]"
                 type="number"
                 min="0"
                 class="w-12 border px-1 text-center bg-blue-200 score-input"
+                :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"
               />
             </td>
 
@@ -154,13 +160,15 @@
             <td
               v-for="(hps, i) in hpsAttendance"
               :key="'hps-attendance-'+i"
-              class="border p-1 bg-blue-200 sticky top-8 z-30"
+              class="border p-1 bg-blue-200 sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }"
             >
               <input
                 v-model.number="hpsAttendance[i]"
                 type="number"
                 min="0"
                 class="w-12 border px-1 text-center bg-blue-200 score-input"
+                :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"
               />
             </td>
 
@@ -172,12 +180,14 @@
             <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">15</td>
 
             <!-- Performance HPS input -->
-            <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30">
+            <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">
               <input
                 v-model.number="hpsPerformance"
                 type="number"
                 min="0"
                 class="w-12 border px-1 text-center bg-blue-200 score-input"
+                :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"
               />
             </td>
             <!-- Performance equiv and 15% cells -->
@@ -185,20 +195,26 @@
             <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">15</td>
 
             <!-- Major Exam HPS inputs -->
-            <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30">
+            <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300 ': isSubmitted, 'bg-blue-200': !isSubmitted }"
+            >
               <input
                 v-model.number="hpsPrelimScore"
                 type="number"
                 min="0"
                 class="w-12 border px-1 text-center bg-blue-200 score-input"
+                :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"
               />
             </td>
-            <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30">
+            <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }"
+            >
               <input
                 v-model.number="hpsMidtermScore"
                 type="number"
                 min="0"
                 class="w-12 border px-1 text-center bg-blue-200 sticky top-8 z-30 score-input"
+                :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"
               />
             </td>
             <!-- Major Exam total, equiv, 40% cells -->
@@ -230,7 +246,8 @@
             <td
               v-for="(score, i) in student.quizzes"
               :key="'quiz-'+index+'-'+i"
-              class="border p-1 bg-blue-100 "
+              class="border p-1"
+              :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }"
             >
               <input
                 v-model.number="student.quizzes[i]"
@@ -238,6 +255,8 @@
                 min="0"
                 :max="hpsQuizzes[i] || 100"
                 class="w-12 border px-1 text-center bg-blue-100 score-input"
+                :disabled="isSubmitted"
+                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"
               />
             </td>
             <!-- Quizzes totals -->
@@ -256,6 +275,7 @@
               v-for="(score, i) in student.attendance"
               :key="'att-'+index+'-'+i"
               class="border p-1 bg-blue-100"
+              :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }"
             >
               <input
                 v-model.number="student.attendance[i]"
@@ -263,6 +283,8 @@
                 min="0"
                 max="1"
                 class="w-12 border px-1 text-center bg-blue-100 score-input"
+                :disabled="isSubmitted"
+                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"
               />
             </td>
             <!-- Attendance totals -->
@@ -277,13 +299,15 @@
             </td>
 
             <!-- Performance input and equiv/15% -->
-            <td class="border p-1 text-center bg-blue-100">
+            <td class="border p-1 text-center bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
               <input
                 v-model.number="student.performance"
                 type="number"
                 min="0"
                 :max="hpsPerformance"
                 class="w-12 border px-1 text-center bg-blue-100 score-input"
+                :disabled="isSubmitted"
+                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"
               />
             </td>
             <td class="border p-1 text-center font-semibold bg-gray-200">
@@ -294,22 +318,26 @@
             </td>
 
             <!-- Major exam inputs -->
-            <td class="border p-1 text-center bg-blue-100">
+            <td class="border p-1 text-center bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
               <input
                 v-model.number="student.prelimScore"
                 type="number"
                 min="0"
                 :max="hpsPrelimScore"
                 class="w-12 border px-1 text-center bg-blue-100 score-input"
+                :disabled="isSubmitted"
+                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"
               />
             </td>
-            <td class="border p-1 text-center bg-blue-100">
+            <td class="border p-1 text-center bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
               <input
                 v-model.number="student.midtermScore"
                 type="number"
                 min="0"
                 :max="hpsMidtermScore"
                 class="w-12 border px-1 text-center bg-blue-100 score-input"
+                :disabled="isSubmitted"
+                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"
               />
             </td>
             <!-- Major exam totals -->
@@ -342,182 +370,212 @@
           </tr>
         </tbody>
       </table>
-    <!-- FINALS TABLE -->
-           <table v-if="activeTab === 'finals'" class="min-w-full border-collapse text-xs">
-        <thead>
-          <!-- Header Row -->
-          <tr>
-            <th rowspan="3" class="bg-gray-300 border p-2">No.</th>
-            <th rowspan="3" class="bg-gray-300 border-none p-2 sticky left-0 top-0 z-40 w-36">LASTNAME</th>
-            <th rowspan="3" class="bg-gray-300 border-none p-2 sticky left-20 top-0 z-40 w-36">FIRSTNAME</th>
-            <th rowspan="3" class="bg-gray-300 border-none p-2 sticky left-40 top-0 z-40 w-36">MIDDLENAME</th>
-
-            <!-- Quizzes -->
-            <th :colspan="quizCount + 3" class="bg-gray-300 border p-2">
-              QUIZZES
-              <button @click="addQuizColumn" class="ml-2 bg-green-500 text-white px-2 py-0.5 rounded text-xs" title="Add Quiz Column">+</button>
-              <button @click="removeQuizColumn" class="ml-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs" title="Remove Quiz Column" :disabled="quizCount <= 1">-</button>
-            </th>
-
-            <!-- Attendance -->
-            <th :colspan="attendanceCount + 3" class="bg-gray-300 border p-2">
-              ATTENDANCE
-              <button @click="addAttendanceColumn" class="ml-2 bg-green-500 text-white px-2 py-0.5 rounded text-xs" title="Add Attendance Column">+</button>
-              <button @click="removeAttendanceColumn" class="ml-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs" title="Remove Attendance Column" :disabled="attendanceCount <= 1">-</button>
-            </th>
-
-            <th colspan="3" class="bg-gray-300 border p-2">PERFORMANCE</th>
-            <th colspan="4" class="bg-gray-300 border p-2">FINAL EXAM / SCORE</th>
-            <th colspan="3" class="bg-gray-300 border p-2">FINAL SUMMARY</th>
-            <th colspan="3" class="bg-gray-300 border p-2">MIDTERM REFERENCE</th>
-          </tr>
-
-          <!-- Column Labels -->
-          <tr>
-            <!-- Quizzes labels -->
-            <th v-for="n in quizCount" :key="'fq-label-'+n" class="bg-blue-200 border p-1 text-center sticky top-0 z-30">Q{{ n }}</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">TOTAL</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">30%</th>
-
-            <!-- Attendance labels -->
-            <th v-for="n in attendanceCount" :key="'fa-label-'+n" class="bg-blue-200 border p-1 text-center sticky top-0 z-30">A{{ n }}</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">TOTAL</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">15%</th>
-
-            <!-- Performance -->
-            <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30">SCORE</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">15%</th>
-
-            <!-- Final Exam -->
-            <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30">SCORE</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">40%</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">FINAL SCORE</th>
-
-            <!-- Final Summary -->
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">FINAL GRADE</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIVALENT</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">REMARKS</th>
-
-            <!-- Midterm reference -->
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">MIDTERM GRADE</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIVALENT</th>
-            <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">REMARKS</th>
-          </tr>
-
-          <!-- HPS Row -->
-          <tr>
-            <!-- Quizzes HPS -->
-            <td v-for="(hps, i) in hpsQuizzes" :key="'fhps-quiz-'+i" class="border p-1 bg-blue-200 sticky top-8 z-30">
-              <input v-model.number="hpsQuizzes[i]" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" />
-            </td>
-            <td class="border p-1 bg-gray-300 text-center font-semibold sticky top-8 z-30">{{ totalQuizHPS.toFixed(0) }}</td>
-            <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
-            <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">30</td>
-
-            <!-- Attendance HPS -->
-            <td v-for="(hps, i) in hpsAttendance" :key="'fhps-att-'+i" class="border p-1 bg-blue-200 sticky top-8 z-30">
-              <input v-model.number="hpsAttendance[i]" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" />
-            </td>
-            <td class="border p-1 bg-gray-300 text-center font-semibold sticky top-8 z-30">{{ totalAttendanceHPS.toFixed(0) }}</td>
-            <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
-            <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">15</td>
-
-            <!-- Performance HPS -->
-            <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30">
-              <input v-model.number="hpsPerformance" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" />
-            </td>
-            <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
-            <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">15</td>
-
-            <!-- Final Exam HPS -->
-            <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30">
-              <input v-model.number="hpsFinalExam" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" />
-            </td>
-            <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
-            <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">40</td>
-            <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30"></td>
-
-            <!-- Final Summary / Midterm blank -->
-            <td colspan="3" class="border p-1 bg-gray-300 sticky top-8 z-30"></td>
-            <td colspan="3" class="border p-1 bg-gray-300 sticky top-8 z-30"></td>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr v-if="loading">
-            <td :colspan="totalColumns" class="text-center p-4">Loading student data...</td>
-          </tr>
-          <tr v-for="(student, index) in students" :key="student.id">
-            <!-- No. and student name -->
-            <td class="border-none p-1 text-center bg-white">{{ index + 1 }}</td>
-            <td class="border-none p-1 sticky left-0 bg-white z-40 w-36">{{ student.lname }}</td>
-            <td class="border-none p-1 sticky left-20 bg-white z-40 w-36">{{ student.fname }}</td>
-            <td class="border-none p-1 sticky left-40 bg-white z-40 w-36">{{ student.mname }}</td>
-
-            <!-- Quizzes -->
-            <td v-for="(score, i) in student.quizzes" :key="'fquiz-'+index+'-'+i" class="border p-1 bg-blue-100">
-              <input v-model.number="student.quizzes[i]" type="number" min="0" :max="hpsQuizzes[i] || 100" class="w-12 border px-1 text-center bg-blue-100 score-input" />
-            </td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-
-            <!-- Attendance -->
-            <td v-for="(score, i) in student.attendance" :key="'fatt-'+index+'-'+i" class="border p-1 bg-blue-100">
-              <input v-model.number="student.attendance[i]" type="number" min="0" max="1" class="w-12 border px-1 text-center bg-blue-100 score-input" />
-            </td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-
-            <!-- Performance -->
-            <td class="border p-1 text-center bg-blue-100">
-              <input v-model.number="student.performance" type="number" min="0" :max="hpsPerformance" class="w-12 border px-1 text-center bg-blue-100 score-input" />
-            </td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-
-            <!-- Final Exam -->
-            <td class="border p-1 text-center bg-blue-100">
-              <input v-model.number="student.finalExam" type="number" min="0" :max="hpsFinalExam" class="w-12 border px-1 text-center bg-blue-100 score-input" />
-            </td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"></td>
-
-            <!-- Final Summary -->
-            <td class="border p-1 text-center font-semibold bg-gray-200"> </td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"> </td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"> </td>
-
-            <!-- Midterm reference -->
-            <td class="border p-1 text-center font-semibold bg-gray-200"> </td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"> </td>
-            <td class="border p-1 text-center font-semibold bg-gray-200"> </td>
-          </tr>
-        </tbody>
-      </table>
 
 
 
+
+
+      <!------------ FINALS TABLE ------------>
+      <table v-if="activeTab === 'finals'" class="min-w-full border-collapse text-xs">
+      <thead>
+        <tr>
+          <th rowspan="3" class="bg-gray-300 border p-2">No.</th>
+          <th rowspan="3" class="bg-gray-300 border-none p-2 sticky left-0 top-0 z-40 w-36">LASTNAME</th>
+          <th rowspan="3" class="bg-gray-300 border-none p-2 sticky left-20 top-0 z-40 w-36">FIRSTNAME</th>
+          <th rowspan="3" class="bg-gray-300 border-none p-2 sticky left-40 top-0 z-40 w-36">MIDDLENAME</th>
+
+          <!-- Quizzes -->
+          <th :colspan="finalQuizCount + 3" class="bg-gray-300 border p-2">
+            QUIZZES
+            <button v-if="!isSubmitted" @click="addFinalQuizColumn" class="ml-2 bg-green-500 text-white px-2 py-0.5 rounded text-xs" title="Add Quiz Column">+</button>
+            <button v-if="!isSubmitted" @click="removeFinalQuizColumn" class="ml-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs" title="Remove Quiz Column" :disabled="finalQuizCount <= 1">-</button>
+          </th>
+
+          <!-- Attendance -->
+          <th :colspan="finalAttendanceCount + 3" class="bg-gray-300 border p-2">
+            ATTENDANCE
+            <button v-if="!isSubmitted" @click="addFinalAttendanceColumn" class="ml-2 bg-green-500 text-white px-2 py-0.5 rounded text-xs" title="Add Attendance Column">+</button>
+            <button v-if="!isSubmitted" @click="removeFinalAttendanceColumn" class="ml-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs" title="Remove Attendance Column" :disabled="finalAttendanceCount <= 1">-</button>
+          </th>
+
+          <th colspan="3" class="bg-gray-300 border p-2">PERFORMANCE</th>
+          <th colspan="3" class="bg-gray-300 border p-2">MAJOR EXAM</th>
+          <th colspan="3" class="bg-gray-300 border p-2">FINAL SUMMARY</th>
+          <th colspan="4" class="bg-gray-300 border p-2">MIDTERM REFERENCE</th>
+        </tr>
+
+        <!-- Column Labels -->
+        <tr>
+          <th v-for="n in finalQuizCount" :key="'fq-label-'+n" class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">Q{{ n }}</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">TOTAL</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">30%</th>
+
+          <th v-for="n in finalAttendanceCount" :key="'fa-label-'+n" class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">A{{ n }}</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">TOTAL</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">15%</th>
+
+          <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">100</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">15%</th>
+
+          <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">FINAL SCORE</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">40%</th>
+
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">FINAL GRADE</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIVALENT</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">REMARKS</th>
+
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">MIDTERM GRADE</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">FINAL RATING</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIVALENT</th>
+          <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">REMARKS</th>
+        </tr>
+
+        <!-- HPS Row -->
+        <tr>
+          <td v-for="(hps, i) in hpsFinalQuizzes" :key="'fhps-quiz-'+i" class="border p-1 bg-blue-200 sticky top-8 z-30"  :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">
+            <input v-model.number="hpsFinalQuizzes[i]" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"/>
+          </td>
+          <td class="border p-1 bg-gray-300 text-center font-semibold sticky top-8 z-30">{{ totalFinalQuizHPS.toFixed(0) }}</td>
+          <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
+          <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">30</td>
+
+          <td v-for="(hps, i) in hpsFinalAttendance" :key="'fhps-att-'+i" class="border p-1 bg-blue-200 sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">
+            <input v-model.number="hpsFinalAttendance[i]" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"/>
+          </td>
+          <td class="border p-1 bg-gray-300 text-center font-semibold sticky top-8 z-30">{{ totalFinalAttendanceHPS.toFixed(0) }}</td>
+          <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
+          <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">15</td>
+
+          <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">
+            <input v-model.number="hpsFinalPerformance" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"/>
+          </td>
+          <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
+          <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">15</td>
+
+          <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">
+            <input v-model.number="hpsFinalExam" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"/>
+          </td>
+          <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
+          <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">40</td>
+
+          <td colspan="7" class="border p-1 bg-gray-300 sticky top-8 z-30"></td>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr v-if="loading">
+          <td :colspan="totalColumns" class="text-center p-4">Loading student data...</td>
+        </tr>
+
+        <tr v-for="(student, index) in finalStudents" :key="student.id">
+          <!-- Student Info -->
+          <td class="border-none p-1 text-center bg-white">{{ index + 1 }}</td>
+          <td class="border-none p-1 sticky left-0 bg-white z-40 w-36">{{ student.lname }}</td>
+          <td class="border-none p-1 sticky left-20 bg-white z-40 w-36">{{ student.fname }}</td>
+          <td class="border-none p-1 sticky left-40 bg-white z-40 w-36">{{ student.mname }}</td>
+
+          <!-- Quizzes -->
+          <td v-for="(score, i) in student.quizzes" :key="'fquiz-'+index+'-'+i" class="border p-1 bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
+            <input v-model.number="student.quizzes[i]" type="number" min="0" :max="hpsFinalQuizzes[i] || 100" class="w-12 border px-1 text-center bg-blue-100 score-input" :disabled="isSubmitted"
+                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"/>
+          </td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.totals.quiz.toFixed(0) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.equivs.quiz.toFixed(0) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.quiz.toFixed(0) }}</td>
+
+          <!-- Attendance -->
+          <td v-for="(score, i) in student.attendance" :key="'fatt-'+index+'-'+i" class="border p-1 bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
+            <input v-model.number="student.attendance[i]" type="number" min="0" :max="hpsFinalAttendance[i] || 1" class="w-12 border px-1 text-center bg-blue-100 score-input" :disabled="isSubmitted"
+                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"/>
+          </td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.totals.attendance.toFixed(0) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.equivs.attendance.toFixed(0) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.attendance.toFixed(0) }}</td>
+
+          <!-- Performance -->
+          <td class="border p-1 text-center bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
+            <input v-model.number="student.performance" type="number" min="0" :max="hpsFinalPerformance" class="w-12 border px-1 text-center bg-blue-100 score-input" :disabled="isSubmitted"
+                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"/>
+          </td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.equivs.performance.toFixed(0) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.performance.toFixed(0) }}</td>
+
+          <!-- Final Exam -->
+          <td class="border p-1 text-center bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
+            <input v-model.number="student.finalExam" type="number" min="0" :max="hpsFinalExam" class="w-12 border px-1 text-center bg-blue-100 score-input" :disabled="isSubmitted"
+                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"/>
+          </td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.equivs.exam.toFixed(0) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.exam.toFixed(0) }}</td>
+
+          <!-- Final Summary -->
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.finalGrade.toFixed(0) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.equivalent.toFixed(1) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200"
+              :class="{
+                'text-green-700 bg-green-100': student.remarks === 'Passed',
+                'text-red-700 bg-red-100': student.remarks === 'Failed'
+              }">
+            {{ student.remarks }}
+          </td>
+
+          <!-- Midterm Reference -->
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ getMidtermGrade(student.studid).toFixed(0) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ (((getMidtermGrade(student.studid) * 0.3) + (student.finalGrade * 0.7))).toFixed(0) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200">{{ ((gradeEquivalent(getMidtermGrade(student.studid)) * 0.3) + (gradeEquivalent(student.finalGrade) * 0.7)).toFixed(1) }}</td>
+          <td class="border p-1 text-center font-semibold bg-gray-200"
+              :class="{
+                'text-green-700 bg-green-100': (((getMidtermGrade(student.studid) * 0.3) + (student.finalGrade * 0.7))) >= 75,
+                'text-red-700 bg-red-100': (((getMidtermGrade(student.studid) * 0.3) + (student.finalGrade * 0.7))) < 75
+              }">
+            {{ (((getMidtermGrade(student.studid) * 0.3) + (student.finalGrade * 0.7))) >= 75 ? 'Passed' : 'Failed' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
     </div>
 
     <!-- Save / Fullscreen Buttons -->
-    <div class="mt-4 text-right">
-      <button @click="toggleFullscreen" class="fullscreen-btn mr-5 px-2 py-2">
-        ⛶ Fullscreen
-      </button>
-
+    <div class="mt-4 text-right absolute bottom-2 right-2">
       <button
+        v-if="!isSubmitted"
         @click="saveGrades"
+        :disabled="loading"
+        class="bg-mccblue hover:bg-mccdarkblue text-white px-4 py-2 rounded transition mr-3"
+      >
+        Save Midterm Grades
+      </button>
+      <button
+        v-if="!isSubmitted"
+        @click="saveFinalGrades"
+        :disabled="loading"
+        class="bg-mccblue hover:bg-mccdarkblue text-white px-4 py-2 rounded transition mr-3"
+      >
+        Save Final Grades
+      </button>
+      <button
+        v-if="!isSubmitted"
+        @click="saveAllGrades"
+        :disabled="loading"
+        class="bg-mccblue hover:bg-mccdarkblue text-white px-4 py-2 rounded transition mr-3"
+      >
+        Save All Grades
+      </button>
+      <button
+        v-if="!isSubmitted"
+        @click="submitGrades"
         :disabled="loading"
         class="bg-mccblue hover:bg-mccdarkblue text-white px-4 py-2 rounded transition"
       >
-        Save Grades
+        Mark as Submitted
       </button>
     </div>
 
@@ -542,6 +600,9 @@
         class="px-3 py-1 rounded border"
       >
         Finals
+      </button>
+      <button @click="toggleFullscreen" class="fullscreen-btn mr-5 px-2 py-2">
+        ⛶ Fullscreen
       </button>
     </div>
   </div>
@@ -589,8 +650,10 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+import Swal from 'sweetalert2'
 import axios from 'axios'
 const activeTab = ref('midterm') // default active tab
+const isSubmitted = ref(false)
 
 const totalColumns = computed(() => {
   // Fixed columns: 4 (No, Lastname, Firstname, Middlename)
@@ -636,6 +699,24 @@ const students = ref([])
 const totalQuizHPS = computed(() => hpsQuizzes.value.reduce((a, b) => a + (Number(b) || 0), 0))
 const totalAttendanceHPS = computed(() => hpsAttendance.value.reduce((a, b) => a + (Number(b) || 0), 0))
 const totalExamHPS = computed(() => (Number(hpsPrelimScore.value) || 0) + (Number(hpsMidtermScore.value) || 0))
+
+
+// ===== FINALS VARIABLES =====
+const finalQuizCount = ref(5)
+const finalAttendanceCount = ref(10)
+const finalStudents = ref([])
+const hpsFinalQuizzes = ref(Array(finalQuizCount.value).fill(0))
+const hpsFinalAttendance = ref(Array(finalAttendanceCount.value).fill(0))
+const hpsFinalPerformance = ref(100)
+const hpsFinalExam = ref(100)
+
+const totalFinalQuizHPS = computed(() =>
+  hpsFinalQuizzes.value.reduce((a, b) => a + (Number(b) || 0), 0)
+)
+const totalFinalAttendanceHPS = computed(() =>
+  hpsFinalAttendance.value.reduce((a, b) => a + (Number(b) || 0), 0)
+)
+
 
 // Add and Remove columns functions
 const addQuizColumn = () => {
@@ -695,7 +776,42 @@ function cleanDecimals(obj) {
   }
 }
 
+const addFinalQuizColumn = () => {
+  finalQuizCount.value++
+  hpsFinalQuizzes.value.push(0)
+  finalStudents.value.forEach(student => {
+    student.quizzes.push('')
+  })
+}
 
+
+const addFinalAttendanceColumn = () => {
+  finalAttendanceCount.value++
+  hpsFinalAttendance.value.push(0)
+  finalStudents.value.forEach(student => {
+    student.attendance.push('')
+  })
+}
+
+const removeFinalQuizColumn = () => {
+  if (finalQuizCount.value > 1) {
+    finalQuizCount.value--
+    hpsFinalQuizzes.value.pop()
+    finalStudents.value.forEach(student => {
+      student.quizzes.pop()
+    })
+  }
+}
+
+const removeFinalAttendanceColumn = () => {
+  if (finalAttendanceCount.value > 1) {
+    finalAttendanceCount.value--
+    hpsFinalAttendance.value.pop()
+    finalStudents.value.forEach(student => {
+      student.attendance.pop()
+    })
+  }
+}
 
 
 
@@ -737,6 +853,8 @@ const fetchGrades = async () => {
         ay_id: ay.value.id,
       },
     })
+
+    isSubmitted.value = Boolean(res.data.submitted)
 
     const data = res.data
     cleanDecimals(data.gradesData);
@@ -815,6 +933,99 @@ const fetchGrades = async () => {
 
 
 
+const fetchFinalGrades = async () => {
+    try {
+    // Fetch session info
+    const res = await axios.get('/session?source=gradeentry')
+    fullname.value = res.data.fullname
+    userLevel.value = res.data.level
+    username.value = res.data.username
+    if (!fullname.value || !userLevel.value || userLevel.value !== 'teacher') {
+      window.location.href = '/'
+      return
+    }
+  } catch {
+    window.location.href = '/'
+    return
+  }
+  try {
+    loading.value = true
+
+    const endpoint = `/finalgrades/${encodeURIComponent(subject)}/${encodeURIComponent(course)}/${encodeURIComponent(year)}/${encodeURIComponent(section)}`
+    console.log(`Fetching FINAL grades from: ${endpoint}?teacher_username=${username.value}&ay_id=${ay.value.id}`)
+
+    const res = await axios.get(endpoint, {
+      params: {
+        teacher_username: username.value,
+        ay_id: ay.value.id,
+      },
+    })
+
+    const data = res.data
+    cleanDecimals(data.gradesData)
+    cleanDecimals(data.gradeComponents)
+
+    // Set counts
+    finalQuizCount.value = data.quizCount ?? 5
+    finalAttendanceCount.value = data.attendanceCount ?? 10
+
+    // HPS
+    const finalQuizHpsObj = data.gradeComponents?.quiz || {}
+    hpsFinalQuizzes.value = Array(finalQuizCount.value)
+      .fill(0)
+      .map((_, idx) => finalQuizHpsObj[idx + 1] ?? 0)
+
+    const finalAttHpsObj = data.gradeComponents?.attendance || {}
+    hpsFinalAttendance.value = Array(finalAttendanceCount.value)
+      .fill(0)
+      .map((_, idx) => finalAttHpsObj[idx + 1] ?? 0)
+
+    hpsFinalPerformance.value = data.gradeComponents?.performance?.[1] ?? 0
+    hpsFinalExam.value = data.gradeComponents?.exam?.[1] ?? 0
+
+    // Students + scores
+    finalStudents.value = data.students.map(s => {
+      const scores = data.gradesData?.[s.studid] || {
+        quizzes: [],
+        attendance: [],
+        performance: '',
+        exams: [],
+      }
+
+      const quizzes = Array(finalQuizCount.value)
+        .fill('')
+        .map((_, i) => (scores.quizzes?.[i] ?? ''))
+
+      const attendance = Array(finalAttendanceCount.value)
+        .fill('')
+        .map((_, i) => (scores.attendance?.[i] ?? ''))
+
+      return {
+        ...s,
+        quizzes,
+        attendance,
+        performance: scores.performance ?? '',
+        finalExam: scores.exams?.[0] ?? '',
+        
+        // placeholders for computed data
+        totals: { quiz: 0, attendance: 0, exam: 0 },
+        equivs: { quiz: 0, attendance: 0, performance: 0, exam: 0 },
+        percents: { quiz: 0, attendance: 0, performance: 0, exam: 0 },
+        finalGrade: 0,
+        equivalent: 0,
+        remarks: 'Failed',
+      }
+    })
+  } catch (err) {
+    console.error('Failed to fetch final grades:', err)
+  } finally {
+    loading.value = false
+  }
+}
+function getMidtermGrade(studid) {
+  const mid = students.value.find(s => s.studid === studid)
+  return mid ? mid.midtermGrade || 0 : 0
+}
 
 
 
@@ -921,6 +1132,51 @@ const calculateGrades = () => {
 
   })
 }
+const calculateFinalGrades = () => {
+  finalStudents.value.forEach(student => {
+    // QUIZZES
+    const totalQuiz = student.quizzes.reduce((a, b) => a + (Number(b) || 0), 0)
+    student.totals.quiz = totalQuiz
+    student.equivs.quiz = totalFinalQuizHPS.value
+      ? (totalQuiz * 40) / totalFinalQuizHPS.value + 60
+      : 0
+    student.percents.quiz = student.equivs.quiz * 0.3
+
+    // ATTENDANCE
+    const totalAtt = student.attendance.reduce((a, b) => a + (Number(b) || 0), 0)
+    student.totals.attendance = totalAtt
+    student.equivs.attendance = totalFinalAttendanceHPS.value
+      ? (totalAtt * 100) / totalFinalAttendanceHPS.value
+      : 0
+    student.percents.attendance = student.equivs.attendance * 0.15
+
+    // PERFORMANCE
+    student.totals.performance = Number(student.performance) || 0
+    student.equivs.performance = hpsFinalPerformance.value
+      ? (student.totals.performance * 50) / hpsFinalPerformance.value + 50
+      : 0
+    student.percents.performance = student.equivs.performance * 0.15
+
+    // FINAL EXAM
+    const finalExam = Number(student.finalExam) || 0
+    student.totals.exam = finalExam
+    student.equivs.exam = hpsFinalExam.value
+      ? (finalExam * 40) / hpsFinalExam.value + 60
+      : 0
+    student.percents.exam = student.equivs.exam * 0.4
+
+    // FINAL GRADE
+    student.finalGrade =
+      (student.percents.quiz || 0) +
+      (student.percents.attendance || 0) +
+      (student.percents.performance || 0) +
+      (student.percents.exam || 0)
+
+    // EQUIVALENT & REMARKS
+    student.equivalent = Number(gradeEquivalent(student.finalGrade).toFixed(1))
+    student.remarks = student.finalGrade >= 75 ? 'Passed' : 'Failed'
+  })
+}
 
 
 
@@ -938,6 +1194,11 @@ const calculateGrades = () => {
 watch(
   [students, hpsQuizzes, hpsAttendance, hpsPerformance, hpsPrelimScore, hpsMidtermScore],
   calculateGrades,
+  { deep: true, immediate: true }
+)
+watch(
+  [finalStudents, hpsFinalQuizzes, hpsFinalAttendance, hpsFinalPerformance, hpsFinalExam],
+  calculateFinalGrades,
   { deep: true, immediate: true }
 )
 
@@ -958,24 +1219,55 @@ watch(
 
 
 
-// --- NEW FUNCTION: Submit All Grades (mark as submitted) ---
+
 const submitGrades = async () => {
+  const result = await Swal.fire({
+    title: 'Submit Grades?',
+    html: `
+      <p class="text-sm text-gray-700">
+        Once submitted, <b>grades cannot be edited or modified</b>.<br>
+        Are you sure you want to finalize and submit all grades for this class?
+      </p>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Submit',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#2563eb',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true,
+  });
+
+  if (!result.isConfirmed) return;
+
   try {
-    // Set all students as submitted = 1
-    students.value.forEach(student => {
-      student.submitted = 1
-    })
-
-    // Optionally send submission status to backend immediately
-    // You can call saveGrades() or send a dedicated endpoint to mark submission
-    await saveGrades()
-
-    alert('Grades submitted successfully!')
-  } catch (error) {
-    console.error('Failed to submit grades:', error)
-    alert('Failed to submit grades.')
+    await axios.post(`/grades/submit`, {
+      teacher_username: username.value,
+      subject_code: subject,
+      course,
+      year,
+      section,
+      ay_id: ay.value.id,
+    });
+    isSubmitted.value = true;
+    await Swal.fire({
+      icon: 'success',
+      title: 'Grades Submitted!',
+      text: 'All grades have been marked as submitted and are now locked.',
+      confirmButtonColor: '#2563eb',
+    });
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Submission Failed!',
+      text: 'An error occurred while submitting grades. Please try again later.',
+      confirmButtonColor: '#ef4444',
+    });
+  } finally {
+    loading.value = false;
   }
-}
+};
 
 
 
@@ -1049,7 +1341,7 @@ const saveGrades = async () => {
           student_id: student.studid,
           component_type: 'quiz',
           component_index: idx + 1,
-          score: Number(score) || 0,
+          score: score, // replace to this version for 0 instead of NULL/Blank ---> score: Number(score) (add Number())
         });
       });
       // Attendance
@@ -1058,7 +1350,7 @@ const saveGrades = async () => {
           student_id: student.studid,
           component_type: 'attendance',
           component_index: idx + 1,
-          score: Number(score) || 0,
+          score: score,
         });
       });
       // Performance
@@ -1066,20 +1358,20 @@ const saveGrades = async () => {
         student_id: student.studid,
         component_type: 'performance',
         component_index: 1,
-        score: Number(student.performance) || 0,
+        score: student.performance,
       });
       // Exams: prelim and midterm
       gradesData.push({
         student_id: student.studid,
         component_type: 'exam',
         component_index: 1,
-        score: Number(student.prelimScore) || 0,
+        score: student.prelimScore,
       });
       gradesData.push({
         student_id: student.studid,
         component_type: 'exam',
         component_index: 2,
-        score: Number(student.midtermScore) || 0,
+        score: student.midtermScore,
       });
     });
 
@@ -1087,8 +1379,6 @@ const saveGrades = async () => {
     const gradesSummary = students.value.map(student => ({
       student_id: student.studid,
       midterm: Number(student.equivalent) || 0,
-      final: Number(student.final) || 0,
-      overall: Number(student.overall) || 0,
     }));
 
     // Send payload to backend
@@ -1106,20 +1396,143 @@ const saveGrades = async () => {
       gradesSummary,
     });
 
-    alert('Grades saved successfully!');
+    await Swal.fire({
+      icon: 'success',
+      title: 'Midterm Grades Saved!',
+      text: 'All midterm grades were successfully saved.',
+      confirmButtonColor: '#2563eb',
+    })
   } catch (error) {
     console.error('Failed to save grades:', error);
-    alert('Failed to save grades.');
+    Swal.fire({
+      icon: 'error',
+      title: 'Failed to Save!',
+      text: 'There was an error saving midterm grades. Please try again.',
+      confirmButtonColor: '#ef4444',
+    })
   }
 };
 
+const saveFinalGrades = async () => {
+  try {
+    const gradeComponents = []
 
+    // Quizzes
+    hpsFinalQuizzes.value.forEach((hps, idx) => {
+      gradeComponents.push({
+        component_type: 'quiz',
+        component_index: idx + 1,
+        hps: Number(hps) || 0,
+      })
+    })
+
+    // Attendance
+    hpsFinalAttendance.value.forEach((hps, idx) => {
+      gradeComponents.push({
+        component_type: 'attendance',
+        component_index: idx + 1,
+        hps: Number(hps) || 0,
+      })
+    })
+
+    // Performance + Exam
+    gradeComponents.push({
+      component_type: 'performance',
+      component_index: 1,
+      hps: Number(hpsFinalPerformance.value) || 0,
+    })
+    gradeComponents.push({
+      component_type: 'exam',
+      component_index: 1,
+      hps: Number(hpsFinalExam.value) || 0,
+    })
+
+    const gradesData = []
+    finalStudents.value.forEach(student => {
+      student.quizzes.forEach((score, i) => {
+        gradesData.push({ student_id: student.studid, component_type: 'quiz', component_index: i + 1, score })
+      })
+      student.attendance.forEach((score, i) => {
+        gradesData.push({ student_id: student.studid, component_type: 'attendance', component_index: i + 1, score })
+      })
+      gradesData.push({ student_id: student.studid, component_type: 'performance', component_index: 1, score: student.performance })
+      gradesData.push({ student_id: student.studid, component_type: 'exam', component_index: 1, score: student.finalExam })
+    })
+
+    const gradesSummary = finalStudents.value.map(s => {
+      const midterm = getMidtermGrade(s.studid)
+      const finalGrade = gradeEquivalent(Number(s.finalGrade)) || 0
+      // Weighted overall (30% midterm + 70% final)
+      const overall = ((gradeEquivalent(midterm) * 0.3) + (finalGrade * 0.7)).toFixed(2)
+      return {
+        student_id: s.studid,
+        final: finalGrade,
+        overall, 
+      }
+    })
+
+
+    await axios.post(`/finalgrades/save`, {
+      teacher_username: username.value,
+      subject_code: subject,
+      course,
+      year,
+      section,
+      ay_id: ay.value.id,
+      gradeComponents,
+      gradesData,
+      gradesSummary,
+      term: 'final',
+    })
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Final Grades Saved!',
+      text: 'All final grades were successfully saved.',
+      confirmButtonColor: '#2563eb',
+    })  
+  } catch (err) {
+    console.error('Failed to save final grades:', err)
+    Swal.fire({
+      icon: 'error',
+      title: 'Save Failed!',
+      text: 'There was an error saving final grades. Please try again.',
+      confirmButtonColor: '#ef4444',
+    })
+  }
+}
+
+
+const saveAllGrades = async () => {
+  try {
+    await Promise.all([
+      saveGrades(),
+      saveFinalGrades()
+    ])
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'All Grades Saved!',
+      text: 'Both Midterm and Final Grades were successfully saved.',
+      confirmButtonColor: '#2563eb',
+    })
+  } catch (error) {
+    console.error('Failed to save both grade sets:', error)
+    Swal.fire({
+      icon: 'error',
+      title: 'Save Failed!',
+      text: 'Something went wrong while saving both grade sets.',
+      confirmButtonColor: '#ef4444',
+    })
+  } finally {
+    loading.value = false
+  }
+}
 
 
 
 
 // Fullscreen Mode
-
 const gradesTable = ref(null)
   
   function toggleFullscreen() {
@@ -1165,10 +1578,20 @@ onMounted(() => {
   fetchCurrentAY()
   if (subject && course && year && section) {
     fetchGrades()
+    fetchFinalGrades()
   } else {
     loading.value = false
   }
 })
+ 
+
+
+
+
+
+
+
+
 
 </script>
 
