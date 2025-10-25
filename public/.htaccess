@@ -1,37 +1,50 @@
+# ===============================================================
+# Laravel Public/.htaccess — Secure + Hostinger Compatible
+# ===============================================================
+
 <IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
+  RewriteEngine On
 
-    RewriteEngine On
+  # 🚫 Block any manual request that includes "/public" in the URL
+  # Works on LiteSpeed because it inspects the raw browser request
+  RewriteCond %{THE_REQUEST} "\s/public([/?#\s]|$)" [NC]
+  RewriteRule ^ - [R=403,L]
 
-    # ------------------------------------------
-    # SECURITY HEADERS - MCCGISv3
-    # ------------------------------------------
-    <IfModule mod_headers.c>
-        # ✅ Enforce HTTPS with HSTS (Strict Transport Security)
-        Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  # Handle Authorization Header
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-        # ✅ Limit browser permissions (Permissions Policy)
-        Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), fullscreen=(self)"
-    </IfModule>
-    # ------------------------------------------
+  # 🚀 Laravel Routing
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^ index.php [L]
+</IfModule>
 
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+# ===============================================================
+# Security Hardening
+# ===============================================================
 
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+# 🔒 Block hidden/system files
+RedirectMatch 404 /\.env
+RedirectMatch 404 /\.git
+RedirectMatch 404 /\.ht
+RedirectMatch 404 /\.env\..*
+RedirectMatch 404 /\.DS_Store
 
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
+# 🔒 Block internal Laravel directories
+RedirectMatch 404 ^/(storage|vendor|bootstrap|resources|config)/.*
 
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+# 🔒 Disable directory browsing
+Options -Indexes
+
+# ===============================================================
+# Security Headers (optional)
+# ===============================================================
+<IfModule mod_headers.c>
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "no-referrer"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), fullscreen=(self)"
 </IfModule>
