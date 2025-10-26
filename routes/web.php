@@ -269,7 +269,7 @@ Route::delete('/curriculums/{id}', [SettingsController::class, 'deleteCurriculum
 
 // Logs for Admin
 Route::get('/admin/login-logs', [LoginLogController::class, 'index']);
-
+Route::get('/admin/logs/geolocate', [LoginLogController::class, 'geolocate']);
 
 
 

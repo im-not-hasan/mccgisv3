@@ -27,6 +27,7 @@
         "clsx": "^2.1.1",
         "echarts": "^5.6.0",
         "handsontable": "^16.0.1",
+        "leaflet": "^1.9.4",
         "lucide-vue-next": "^0.514.0",
         "motion-v": "^1.2.1",
         "ogl": "^1.0.11",
