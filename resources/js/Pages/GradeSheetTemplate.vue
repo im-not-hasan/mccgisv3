@@ -224,7 +224,7 @@
 
               <div class="mb-2">
                 <div class="mb-1 text-center mt-[-2px]">Certified Correct:</div>
-                <div class="text-center font-bold underline mt-2">CHARO MAE F. ORBETA</div>
+                <div class="text-center font-bold underline mt-2">ROBERTO CARATAO</div>
                 <div class="text-center mt-[-2px]">Registrar</div>
               </div>
 
@@ -294,7 +294,7 @@
 
               <div class="mb-2">
                 <div class="mb-1 text-center mt-[-2px]">Certified Correct:</div>
-                <div class="text-center font-bold underline mt-2">CHARO MAE F. ORBETA</div>
+                <div class="text-center font-bold underline mt-2">ROBERTO CARATAO</div>
                 <div class="text-center mt-[-2px]">Registrar</div>
               </div>
 

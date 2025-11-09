@@ -17,6 +17,7 @@
           class="border px-3 py-1 rounded w-full md:w-64"
         />
         <StudentForm
+          v-if="userLevel !== 'registrar'"
           :course="course"
           class="ml-4"
           @submitted="fetchStudents"
@@ -38,7 +39,7 @@
                   {{ sortPriority.find(s => s.key === column.key).direction === 'asc' ? '▲' : '▼' }}
                 </span>
               </th>
-              <th class="px-4 py-2 text-center">Actions</th>
+              <th v-if="userLevel !== 'registrar'" class="px-4 py-2 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -47,7 +48,7 @@
               <td class="px-4 py-2">{{ student.fname }} {{ student.lname }}</td>
               <td class="px-4 py-2 text-center">{{ student.gender }}</td>
               <td class="px-4 py-2 text-center">{{ student.year }}</td>
-              <td class="px-4 py-2 text-center space-x-2">
+              <td v-if="userLevel !== 'registrar'" class="px-4 py-2 text-center space-x-2">
                 <button @click="editStudent(student)" class="text-blue-600 hover:underline">Edit</button>
                 <button @click="deleteStudent(student.id)" class="text-red-600 hover:underline">Delete</button>
               </td>

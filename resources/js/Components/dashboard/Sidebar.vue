@@ -178,6 +178,17 @@
     </template>
   </SidebarLink>
 
+   <SidebarLink name="View Grades" href="/viewgrades">
+    <template #icon>
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 14l9-5-9-5-9 5 9 5z
+                 M12 14l6.16-3.422A12.083 12.083 0 0121 10.78v6.72a2 2 0 01-2 2H5
+                 a2 2 0 01-2-2v-6.72c.888.28 1.833.614 2.84 1.056L12 14z" />
+      </svg>
+    </template>
+  </SidebarLink>
+
   <SidebarLink name="Consultation" href="/consultation">
     <template #icon>
       <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

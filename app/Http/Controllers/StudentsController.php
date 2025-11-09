@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StudentsController extends Controller
 {
@@ -344,9 +345,209 @@ class StudentsController extends Controller
     }
 
     public function checkStudid($studid)
-{
-    $exists = DB::table('student')->where('studid', $studid)->exists();
-    return response()->json(['exists' => $exists]);
-}
+    {
+        $exists = DB::table('student')->where('studid', $studid)->exists();
+        return response()->json(['exists' => $exists]);
+    }
+
+    public function viewGradesData(Request $request)
+    {
+        $username = session('username');
+        $student = DB::table('student')->where('studid', $username)->first();
+
+        if (!$student) {
+            return response()->json(['student' => null, 'grouped' => []]);
+        }
+
+        // active curriculum (can be 0)
+        $activeCurriculum = DB::table('curriculums')->where('display', 1)->first();
+        $curriculumCode = $activeCurriculum?->curriculum; // could be 0
+
+        $subjectsQuery = DB::table('subject')
+            ->where('course', $student->course);
+
+        // IMPORTANT: apply even if curriculum = 0
+        if (!is_null($curriculumCode)) {
+            $subjectsQuery->where('curriculum', $curriculumCode);
+        }
+
+        $subjects = $subjectsQuery
+            ->orderBy('year')
+            ->orderBy('semester')
+            ->orderBy('code')
+            ->get();
+
+        // student grades
+        $grades = DB::table('grades')
+            ->where('student_id', $student->id)
+            ->pluck('overall', 'subject_id');
+
+        // map + normalize semester
+        $mapped = $subjects->map(function ($s) use ($grades) {
+            // normalize semester to 1 / 2 / 3
+            $rawSem = strtolower((string) $s->semester);
+            if ($rawSem === 'summer' || $rawSem === 'midyear' || $rawSem === '3') {
+                $sem = 3;
+            } else {
+                $sem = (int) $s->semester; // 1 or 2
+            }
+
+            return [
+                'id'          => $s->id,
+                'code'        => $s->code,
+                'title'       => $s->title,
+                'year'        => (int) $s->year,
+                'semester'    => $sem,
+                'total_units' => $s->totalunit ?? 0,
+                'grade'       => $grades[$s->id] ?? null,
+            ];
+        });
+
+        // labels
+        $years = [
+            1 => 'First Year',
+            2 => 'Second Year',
+            3 => 'Third Year',
+            4 => 'Fourth Year',
+        ];
+        $semesters = [
+            1 => 'First Semester',
+            2 => 'Second Semester',
+            3 => 'Summer',
+        ];
+
+        $grouped = [];
+        foreach ($years as $y => $yLabel) {
+            $grouped[$yLabel] = [];
+            foreach ($semesters as $semNum => $semLabel) {
+                $list = $mapped
+                    ->where('year', $y)
+                    ->where('semester', $semNum)
+                    ->values();
+                if ($list->isNotEmpty()) {
+                    $grouped[$yLabel][$semLabel] = $list;
+                }
+            }
+        }
+
+        return response()->json([
+            'student'    => [
+                'fullname' => "{$student->fname} {$student->lname}",
+                'course'   => $student->course,
+                'year'     => $student->year,
+                'section'  => $student->section,
+            ],
+            'curriculum' => $curriculumCode,
+            'grouped'    => $grouped,
+        ]);
+    }    
+
+    public function downloadGradeSlip(Request $request)
+    {
+        // 1) get logged-in student
+        $username = session('username');
+        $student = DB::table('student')->where('studid', $username)->first();
+        if (!$student) {
+            abort(404, 'Student not found.');
+        }
+
+        // 2) get active curriculum (can be 0)
+        $activeCurriculum = DB::table('curriculums')->where('display', 1)->first();
+        $curriculumCode = $activeCurriculum?->curriculum; // could be 0
+
+        // 3) base subject query for this student's course + curriculum
+        $subjectsQuery = DB::table('subject')
+            ->where('course', $student->course);
+
+        // important: apply even if curriculum = 0
+        if (!is_null($curriculumCode)) {
+            $subjectsQuery->where('curriculum', $curriculumCode);
+        }
+
+        // we’ll select all relevant columns; adjust names if yours differ
+        $subjects = $subjectsQuery
+            ->select(
+                'id',
+                'code',
+                'title',
+                'year',
+                'semester',
+                'lecunit',
+                'labunit',
+                'totalunit',
+                'pre'
+            )
+            ->orderBy('year')
+            ->orderBy('semester')
+            ->orderBy('code')
+            ->get();
+
+        // 4) get student grades and index by subject_id
+        $grades = DB::table('grades')
+            ->where('student_id', $student->id)
+            ->pluck('overall', 'subject_id');
+
+        // 5) normalize + attach grade
+        $normalized = $subjects->map(function ($s) use ($grades) {
+            // normalize semester: db can have "1", "2", "summer"
+            $rawSem = strtolower((string) $s->semester);
+            if ($rawSem === 'summer' || $rawSem === 'midyear' || $rawSem === '3') {
+                $sem = 3;
+            } else {
+                $sem = (int) $s->semester;
+            }
+
+            return (object) [
+                'id'          => $s->id,
+                'code'        => $s->code,
+                'title'       => $s->title,
+                'year'        => (int) $s->year,
+                'semester'    => $sem,
+                'lecunit'     => $s->lecunit ?? 0,
+                'labunit'     => $s->labunit ?? 0,
+                'totalunit'   => $s->totalunit ?? 0,
+                'pre'=> $s->prerequisite ?? 'None',
+                'grade'       => $grades[$s->id] ?? null,
+            ];
+        });
+
+        // 6) build grouped array EXACTLY like the school sheet
+        $yearLabels = [
+            1 => 'First Year',
+            2 => 'Second Year',
+            3 => 'Third Year',
+            4 => 'Fourth Year',
+        ];
+        $semLabels = [
+            1 => 'First Semester',
+            2 => 'Second Semester',
+            3 => 'Summer',
+        ];
+
+        $grouped = [];
+        foreach ($yearLabels as $yearNum => $yearLabel) {
+            $grouped[$yearLabel] = [];
+            foreach ($semLabels as $semNum => $semLabel) {
+                // filter subjects that match this year + sem
+                $list = $normalized
+                    ->where('year', $yearNum)
+                    ->where('semester', $semNum)
+                    ->values();
+
+                if ($list->isNotEmpty()) {
+                    $grouped[$yearLabel][$semLabel] = $list;
+                }
+            }
+        }
+
+        // 7) render PDF with the official-looking blade
+        $pdf = Pdf::loadView('pdf.gradeslip', [
+            'student'    => $student,
+            'grouped'    => $grouped,
+            'printedAt'  => now()->format('F d, Y'),
+        ])->setPaper('legal', 'portrait');
+
+        return $pdf->download('gradeslip-'.$student->studid.'.pdf');
+    }
 
 }

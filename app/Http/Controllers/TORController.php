@@ -326,7 +326,7 @@ class TORController extends Controller
                 'country'  => 'Republic of the Philippines',
                 'province' => 'Province of Cebu',
                 'municipal'=> 'Municipality of Madridejos',
-                'name'     => 'MADridejos Community College',
+                'name'     => 'Madridejos Community College',
                 'office'   => 'OFFICE OF THE REGISTRAR',
                 'address'  => 'Bunakan, Madridejos, Cebu',
                 'email'    => 'madrccollege@municipality.com',
@@ -334,7 +334,7 @@ class TORController extends Controller
 
             $footer = (object)[
                 'prepared_by'     => 'RENO R. SEVILLAO',
-                'registrar'       => 'CHARO MAE F. ORBETA',
+                'registrar'       => 'ROBERTO CARATAO',
                 'registrar_title' => 'College Registrar',
             ];
 

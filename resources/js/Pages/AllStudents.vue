@@ -10,7 +10,7 @@
       </div>
       <div class="flex flex-col md:flex-row gap-2 items-center">
         <!-- Import -->
-        <button
+        <button v-if="userLevel !== 'registrar'"
           @click="openImportModal"
           class="bg-mccblue text-white px-3 py-1 rounded hover:bg-mccdarkblue transition"
         >
@@ -18,7 +18,7 @@
         </button>
 
         <!-- Export template (no data) -->
-        <button
+        <button v-if="userLevel !== 'registrar'"
           @click="exportTemplate"
           class="bg-mccblue text-white px-3 py-1 rounded hover:bg-mccdarkblue transition"
         >
