@@ -328,6 +328,8 @@ Route::get('/ldpukcabbd', [BackupController::class, 'download'])
 
 
 
+
+
 // View Grades (for students)
 Route::get('/student/viewgrades/data', [StudentsController::class, 'viewGradesData'])
     ->name('student.viewgrades.data')->middleware('ensure.logged');
