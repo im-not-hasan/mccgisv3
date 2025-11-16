@@ -133,7 +133,7 @@ class CustomLoginController extends Controller
 
         if ($level === 'student') {
             $email = DB::table('student')->where('studid', $username)->value('email');
-        } elseif (in_array($level, ['teacher', 'registrar'])) {
+        } elseif (in_array($level, ['teacher', 'registrar','admin'])) {
             $email = DB::table('teacher')->where('teachid', $username)->value('email');
         }
 
