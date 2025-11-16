@@ -99,17 +99,6 @@ const loading = ref(true)
 const curriculum = ref(null)
 const grouped = ref({})
 
-const fetchSession = async () => {
-  try {
-    const res = await axios.get('/session')
-    fullname.value = res.data.fullname
-    userLevel.value = res.data.level
-    username.value = res.data.username
-    if (!fullname.value || !userLevel.value) window.location.href = '/'
-  } catch {
-    window.location.href = '/'
-  }
-}
 
 const fetchViewGradesData = async () => {
   const res = await axios.get('/student/viewgrades/data')
@@ -156,7 +145,6 @@ const downloadPdf = async () => {
 
 onMounted(async () => {
   try {
-    await fetchSession()
     await fetchViewGradesData()
   } finally {
     loading.value = false
