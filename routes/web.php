@@ -69,6 +69,7 @@ Route::get('/consultation', fn () => Inertia::render('Consultation'))->name('con
 Route::get('/settings', fn () => Inertia::render('Settings'))->name('settings')->middleware('ensure.logged');
 Route::get('/terms', function () {return inertia('Terms');});
 Route::get('/viewgrades', fn () => Inertia::render('ViewGrades'))->name('viewgrades')->middleware('ensure.logged:student');
+Route::get('/trash', function () {return Inertia::render('Trash');})->middleware('ensure.logged:admin');
 
 
 // Login and Logout
@@ -233,7 +234,7 @@ Route::post('/students', [StudentsController::class, 'store'])->middleware('ensu
 Route::put('/students/{id}', [StudentsController::class, 'update'])->middleware('ensure.logged:admin');
 
 // Delete Student
-Route::delete('/students/{id}', [StudentsController::class, 'destroy'])->middleware('ensure.logged:admin');
+Route::delete('/students/{id}', [StudentsController::class, 'deleteStudent'])->middleware('ensure.logged:admin');
 
 // Get Student Details (for dashboard)
 Route::get('/student/dashboard', [DashboardController::class, 'studentDashboard'])->middleware('ensure.logged');
@@ -334,3 +335,23 @@ Route::get('/student/viewgrades/data', [StudentsController::class, 'viewGradesDa
     ->name('student.viewgrades.data')->middleware('ensure.logged');
 // Download Grades
 Route::get('/viewgrades/download', [StudentsController::class, 'downloadGradeSlip'])->middleware('ensure.logged:student');
+
+
+
+
+// Archived, Restores, and Force Deleted
+Route::get('/ay/archived', [SettingsController::class, 'getArchivedAY'])->middleware('ensure.logged:admin');
+Route::get('/curriculums/archived', [SettingsController::class, 'getArchivedCurriculums'])->middleware('ensure.logged:admin');
+Route::get('/students/settings/archived', [StudentsController::class, 'getArchivedStudents'])->middleware('ensure.logged:admin'); // added /settings/ cause it calls other functions above
+
+
+
+Route::post('/ay/{id}/restore', [SettingsController::class, 'restoreAcademicYear'])->middleware('ensure.logged:admin');
+Route::post('/curriculums/{id}/restore', [SettingsController::class, 'restoreCurriculum']);
+Route::post('/students/settings/{id}/restore', [StudentsController::class, 'restoreStudent'])->middleware('ensure.logged:admin');
+
+
+
+Route::delete('/ay/{id}/force-delete', [SettingsController::class, 'forceDeleteAcademicYear'])->middleware('ensure.logged:admin');
+Route::delete('/curriculums/{id}/force-delete', [SettingsController::class, 'forceDeleteCurriculum']);
+Route::delete('/students/settings/{id}/force-delete', [StudentsController::class, 'forceDeleteStudent'])->middleware('ensure.logged:admin');

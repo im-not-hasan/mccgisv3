@@ -103,8 +103,14 @@ const toggleDisplay = async (year) => {
 
 const deleteAY = async (year) => {
   const confirm = await Swal.fire({
-    title: 'Are you sure?',
-    text: `Delete Academic Year ${year.academicyear} - ${year.semester === '1' ? 'First Semester' : year.semester === '2' ? 'Second Semester' : 'Summer'}?`,
+    title: 'Move to Trash?',
+    text: `Move Academic Year ${year.academicyear} - ${
+      year.semester === '1'
+        ? 'First Semester'
+        : year.semester === '2'
+        ? 'Second Semester'
+        : 'Summer'
+    } to trash?`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#e3342f',
@@ -119,7 +125,7 @@ const deleteAY = async (year) => {
 
       Swal.fire({
         icon: 'success',
-        title: 'Academic Year Deleted',
+        title: 'Moved to Trash',
         toast: true,
         position: 'top-end',
         timer: 2000,
@@ -130,6 +136,7 @@ const deleteAY = async (year) => {
     }
   }
 }
+
 
 onMounted(() => {
   fetchSession()

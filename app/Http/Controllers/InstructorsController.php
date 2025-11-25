@@ -54,7 +54,7 @@ class InstructorsController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'teachid'    => 'required|string|max:11',
+            'teachid'    => 'required|string|max:12',
             'fname'      => 'required|string|max:100',
             'mname'      => 'nullable|string|max:50',
             'lname'      => 'required|string|max:100',
@@ -95,7 +95,7 @@ class InstructorsController extends Controller
         public function update(Request $request, $id)
         {
             $validated = $request->validate([
-                'teachid'    => 'required|string|max:11',
+                'teachid'    => 'required|string|max:12',
                 'fname'      => 'required|string|max:100',
                 'mname'      => 'nullable|string|max:50',
                 'lname'      => 'required|string|max:100',

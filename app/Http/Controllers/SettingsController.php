@@ -12,8 +12,18 @@ class SettingsController extends Controller
 {
     public function getAY()
     {
-        $ay = DB::table('ay')->select('id', 'academicyear', 'semester', 'display')->get();
+        $ay = DB::table('ay')->select('id', 'academicyear', 'semester', 'display')->where('archived', 0)->get();
         \Log::info('Fetched academic years:', ['data' => $ay]);
+        return response()->json($ay);
+    }
+
+    public function getArchivedAY()
+    {
+        $ay = DB::table('ay')
+            ->select('id', 'academicyear', 'semester', 'display')
+            ->where('archived', 1)
+            ->get();
+
         return response()->json($ay);
     }
 
@@ -31,9 +41,31 @@ class SettingsController extends Controller
 
     public function deleteAcademicYear($id)
     {
-        DB::table('ay')->where('id', $id)->delete();
+        DB::table('ay')
+            ->where('id', $id)
+            ->update(['archived' => 1, 'display' => 0]);
+
+        return response()->json(['success' => true, 'archived' => true]);
+    }
+
+    public function restoreAcademicYear($id)
+    {
+        DB::table('ay')
+            ->where('id', $id)
+            ->update(['archived' => 0]);
+
         return response()->json(['success' => true]);
     }
+
+    public function forceDeleteAcademicYear($id)
+    {
+        DB::table('ay')
+            ->where('id', $id)
+            ->delete();
+
+        return response()->json(['success' => true, 'deleted' => true]);
+    }
+
 
     public function storeAcademicYear(Request $request)
     {
@@ -88,6 +120,7 @@ class SettingsController extends Controller
     {
         $rows = DB::table('curriculums')
             ->select('id', 'curriculum', 'display')
+            ->where('archived', 0)
             ->orderBy('curriculum', 'asc')
             ->get();
 
@@ -154,9 +187,45 @@ class SettingsController extends Controller
 
     public function deleteCurriculum($id)
     {
-        DB::table('curriculums')->where('id', $id)->delete();
-        // \Log::info('[Settings] Curriculum deleted', ['id' => (int) $id]);
+        DB::table('curriculums')
+            ->where('id', $id)
+            ->update([
+                'archived' => 1,
+                'display'  => 0, 
+            ]);
+
+        // \Log::info('[Settings] Curriculum moved to trash', ['id' => (int) $id]);
+        return response()->json(['success' => true, 'archived' => true]);
+    }
+
+    public function getArchivedCurriculums()
+    {
+        $rows = DB::table('curriculums')
+            ->select('id', 'curriculum', 'display')
+            ->where('archived', 1)
+            ->orderBy('curriculum', 'asc')
+            ->get();
+
+        return response()->json($rows);
+    }
+
+    public function restoreCurriculum($id)
+    {
+        DB::table('curriculums')
+            ->where('id', $id)
+            ->update(['archived' => 0]);
+
         return response()->json(['success' => true]);
     }
+
+    public function forceDeleteCurriculum($id)
+    {
+        DB::table('curriculums')
+            ->where('id', $id)
+            ->delete();
+
+        return response()->json(['success' => true, 'deleted' => true]);
+    }
+
 
 }

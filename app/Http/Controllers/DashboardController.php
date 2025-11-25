@@ -32,8 +32,8 @@ class DashboardController extends Controller
 
             // 🟢 2. Basic Counts
             if ($level === 'admin' || $level === 'registrar') {
-                $counts['students'] = DB::table('student')->count();
-                $counts['teachers'] = DB::table('teacher')->count();
+                $counts['students'] = DB::table('student')->where('archived',0)->count();
+                $counts['teachers'] = DB::table('teacher')->where('archived',0)->count();
                 $counts['class'] = DB::table('class')->count();
                 $counts['subjects'] = DB::table('subject')
                     ->where('curriculum', $curriculum->curriculum)

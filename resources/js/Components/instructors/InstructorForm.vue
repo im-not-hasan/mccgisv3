@@ -24,8 +24,9 @@
                 <input
                 type="text"
                 v-model="form.teachid"
-                placeholder="e.g. 20001234"
-                maxlength="8" 
+                @input="formatTeachid"
+                placeholder="e.g. EMP2000-1234"
+                maxlength="12" 
                 class="peer w-full rounded-md border border-gray-300 bg-white text-gray-800 px-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mccblue focus:border-mccblue transition"
                 required
               />
@@ -233,6 +234,44 @@ const checkTeachidExists = async (teachid) => {
   }
 }
 
+const formatTeachid = () => {
+  let raw = (form.value.teachid || '').toUpperCase()
+
+  // If empty, allow it to stay empty
+  if (!raw) {
+    form.value.teachid = ''
+    return
+  }
+
+  // Strip leading 'EMP' if present so we can re-build cleanly
+  if (raw.startsWith('EMP')) {
+    raw = raw.slice(3)
+  }
+
+  // Keep digits only
+  raw = raw.replace(/\D/g, '')
+
+  // If no digits left, clear completely (avoids forcing "EMP" alone)
+  if (!raw) {
+    form.value.teachid = ''
+    return
+  }
+
+  // Limit to 8 digits (4 + 4)
+  if (raw.length > 8) {
+    raw = raw.slice(0, 8)
+  }
+
+  // Insert dash after first 4 digits if there are more
+  let formattedDigits = raw
+  if (raw.length > 4) {
+    formattedDigits = raw.slice(0, 4) + '-' + raw.slice(4)
+  }
+
+  // Final format: EMP####-####
+  form.value.teachid = 'EMP' + formattedDigits
+}
+
 const handleSubmit = async () => {
   // Check if teachid exists only when adding new
   if (!props.editMode) {
@@ -298,4 +337,3 @@ const handleSubmit = async () => {
   opacity: 0;
 }
 </style>
-z

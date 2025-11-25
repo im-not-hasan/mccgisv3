@@ -1,9 +1,9 @@
 <template>
-  <DashboardLayout :fullname="fullname" :userLevel="userLevel" title="Teachers" class="animate-slide-in-top">
+  <DashboardLayout :fullname="fullname" :userLevel="userLevel" title="Instructors" class="animate-slide-in-top">
     <div class="flex flex-col md:flex-row gap-6 p-1">
       <!-- Charts -->
       <div class="flex-1 bg-white rounded-lg shadow p-4">
-        <h2 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Teacher Statistics</h2>
+        <h2 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Instructor Statistics</h2>
         <div class="grid grid-cols-1 md:grid-cols-2">
           <v-chart :option="departmentChartOptions" autoresize class="h-[300px]" />
           <v-chart :option="genderChartOptions" autoresize class="h-[300px]"/>
@@ -30,7 +30,7 @@
     <!-- Totals -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 px-4">
       <div class="bg-white shadow p-4 rounded-lg text-center">
-        <h3 class="text-gray-700 font-semibold text-lg">Total Teachers</h3>
+        <h3 class="text-gray-700 font-semibold text-lg">Total Instructors</h3>
         <p class="text-3xl font-bold text-mcclightblue">{{ overallCounts.total }}</p>
       </div>
       <div class="bg-white shadow p-4 rounded-lg text-center">
@@ -87,7 +87,7 @@ const fetchSession = async () => {
   }
 }
 
-const fetchTeacherStats = async () => {
+const fetchInstructorStats = async () => {
   try {
     const res = await axios.get('/instructor-stats') // endpoint you’ll create
     departmentData.value = res.data.byDepartment
@@ -103,7 +103,7 @@ const fetchTeacherStats = async () => {
   }
 }
 
-// Chart: Teachers by department
+// Chart: Instructors by department
 const departmentChartOptions = computed(() => ({
   tooltip: { trigger: 'axis' },
   xAxis: {
@@ -129,7 +129,7 @@ const departmentChartOptions = computed(() => ({
   grid: { left: '5%', right: '5%', bottom: '10%', top: '10%', containLabel: true },
 }))
 
-// Chart: Teachers by gender
+// Chart: Instructors by gender
 const genderChartOptions = computed(() => ({
   tooltip: {
     trigger: 'item',
@@ -159,6 +159,6 @@ const genderChartOptions = computed(() => ({
 
 onMounted(() => {
   fetchSession()
-  fetchTeacherStats()
+  fetchInstructorStats()
 })
 </script>

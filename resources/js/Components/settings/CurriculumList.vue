@@ -111,8 +111,8 @@ const toggleDisplay = async (c) => {
 
 const deleteCurriculum = async (c) => {
   const confirm = await Swal.fire({
-    title: 'Are you sure?',
-    text: `Delete Curriculum ${c.curriculum}?`,
+    title: 'Move to Trash?',
+    text: `Move Curriculum ${c.curriculum} to trash?`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#e3342f',
@@ -124,19 +124,21 @@ const deleteCurriculum = async (c) => {
     try {
       await axios.delete(`/curriculums/${c.id}`)
       curriculumList.value = curriculumList.value.filter((x) => x.id !== c.id)
+
       Swal.fire({
         icon: 'success',
-        title: 'Curriculum Deleted',
+        title: 'Moved to Trash',
         toast: true,
         position: 'top-end',
         timer: 2000,
         showConfirmButton: false,
       })
     } catch {
-      Swal.fire('Error', 'Could not delete curriculum', 'error')
+      Swal.fire('Error', 'Could not move curriculum to trash', 'error')
     }
   }
 }
+
 
 onMounted(fetchCurriculums)
 </script>

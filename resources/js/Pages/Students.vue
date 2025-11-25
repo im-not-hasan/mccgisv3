@@ -38,7 +38,7 @@
     </div>
 
     <!-- Totals -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 px-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 px-4">
       <div class="bg-white shadow p-4 rounded-lg text-center">
         <h3 class="text-gray-700 font-semibold text-lg">Total Students</h3>
         <p class="text-3xl font-bold text-mcclightblue">{{ overallCounts.total }}</p>
@@ -47,6 +47,12 @@
         <h3 class="text-gray-700 font-semibold text-lg">Male / Female</h3>
         <p class="text-2xl font-bold text-gray-700">
           👨 {{ overallCounts.male }} &nbsp;&nbsp; 👩 {{ overallCounts.female }}
+        </p>
+      </div>
+      <div class="bg-white shadow p-4 rounded-lg text-center">
+        <h3 class="text-gray-700 font-semibold text-lg">Regular / Irregular</h3>
+        <p class="text-2xl font-bold text-mcclightblue">
+           {{ overallCounts.regular || 0}} /   {{ overallCounts.irregular || 0 }}
         </p>
       </div>
     </div>
@@ -77,7 +83,9 @@ const username = ref('')
 // Data
 const courseData = ref({})
 const genderData = ref({})
-const overallCounts = ref({ total: 0, male: 0, female: 0 })
+const overallCounts = ref({ total: 0, male: 0, female: 0, regular: 0, irregular: 0})         
+const courseRegularData = ref({})   
+const courseIrregularData = ref({}) 
 
 const courseCards = ref([
   { label: 'BSIT', count: 0, color: '#dc2626' },
@@ -103,6 +111,8 @@ const fetchStudentStats = async () => {
   try {
     const res = await axios.get('/student-stats') // endpoint from StudentsController
     courseData.value = res.data.byCourse
+    courseRegularData.value   = res.data.byCourseRegular   || {}
+    courseIrregularData.value = res.data.byCourseIrregular || {}
     genderData.value = res.data.byGender
     overallCounts.value = res.data.totals
 
@@ -115,31 +125,62 @@ const fetchStudentStats = async () => {
   }
 }
 
-// Chart: Students by course
-const courseChartOptions = computed(() => ({
-  tooltip: { trigger: 'axis' },
-  xAxis: {
-    type: 'category',
-    data: courseCards.value.map(c => c.label),
-    axisLabel: { fontWeight: 'bold', color: '#374151' },
-  },
-  yAxis: {
-    type: 'value',
-    axisLabel: { color: '#6B7280' },
-  },
-  series: [
-    {
-      data: courseCards.value.map(c => c.count),
-      type: 'bar',
-      barWidth: '50%',
-      itemStyle: {
-        borderRadius: 6,
-        color: (params) => courseCards.value[params.dataIndex].color,
-      },
+// 🔹 Chart: Students by course (stacked bar: Regular vs Irregular)
+const courseChartOptions = computed(() => {
+  const labels = courseCards.value.map(c => c.label)
+
+  const regularSeries = labels.map(label => courseRegularData.value[label] || 0)
+  const totalSeries   = labels.map(label => courseData.value[label] || 0)
+  const irregularSeries = totalSeries.map((total, idx) => {
+    const reg = regularSeries[idx]
+    const irr = total - reg
+    return irr < 0 ? 0 : irr
+  })
+
+  return {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' }
     },
-  ],
-  grid: { left: '5%', right: '5%', bottom: '10%', top: '10%', containLabel: true },
-}))
+    legend: {
+      data: ['Regular', 'Irregular'],
+    },
+    xAxis: {
+      type: 'category',
+      data: labels,
+      axisLabel: { fontWeight: 'bold', color: '#374151' },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { color: '#6B7280' },
+    },
+    series: [
+      {
+        name: 'Regular',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '50%',
+        data: regularSeries,
+        itemStyle: {
+          borderRadius: [6, 6, 0, 0],
+          color: (params) => courseCards.value[params.dataIndex].color, 
+        },
+      },
+      {
+        name: 'Irregular',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '50%',
+        data: irregularSeries,
+        itemStyle: {
+          borderRadius: [6, 6, 0, 0],
+          color: '#22c55e', 
+        },
+      },
+    ],
+    grid: { left: '5%', right: '5%', bottom: '10%', top: '10%', containLabel: true },
+  }
+})
 
 // Chart: Students by gender
 const genderChartOptions = computed(() => ({

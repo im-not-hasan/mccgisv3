@@ -390,13 +390,16 @@ async function submit() {
     const token = await getRecaptchaToken('login')
     const res = await axios.post('/custom-login', { ...form, recaptcha_token: token })
 
+
     if (res.data.require_otp) {
       Swal.fire('OTP Sent', 'A verification code was sent to your registered email.', 'info')
       step.value = 'otp'
       level.value = res.data.level
       otpContext.value = 'login'
       startResendCooldown()
-    } else {
+    } 
+    
+    else {
       Swal.fire({
         icon: 'success',
         title: 'Login Successful!',
@@ -409,6 +412,8 @@ async function submit() {
     const status = error.response?.status, data = error.response?.data
     if (status === 404 && data?.error === 'not_found')
       Swal.fire('User Not Found', 'No account with that Username.', 'error')
+    else if (status === 404 && data?.error === 'no_email')
+      Swal.fire('No Email Found', data?.message || 'No email is registered for this account. Please contact the admin to update your email.', 'error')
     else if (status === 401 && data?.error === 'wrong_password')
       Swal.fire('Incorrect Password', `Wrong password. ${data.attempts} attempt(s) remaining.`, 'error')
     else if (status === 429 && data?.error === 'locked') {

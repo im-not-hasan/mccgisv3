@@ -20,11 +20,11 @@
       />
 
       <CardSpotlight
-        label="Teachers"
+        label="Instructors"
         :count="counts.teachers || 0"
         iconName="teachers"
         :useSvg="true"
-        @click="goToTeachers"
+        @click="goToInstructors"
         class="cursor-pointer"
       />
 
@@ -157,7 +157,7 @@ watch(
 // Nav functions
 const goToSubjects = () => router.visit(`/subjects`)
 const goToClasses = () => router.visit(`/classes`)
-const goToTeachers = () => router.visit(`/instructors`)
+const goToInstructors = () => router.visit(`/instructors`)
 const goToStudents = () => router.visit(`/students`)
 const goToIncompleteGrades = () => router.visit(`/grades/incomplete`)
 </script>

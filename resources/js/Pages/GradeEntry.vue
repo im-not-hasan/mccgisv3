@@ -254,9 +254,25 @@
                 type="number"
                 min="0"
                 :max="hpsQuizzes[i] || 100"
-                class="w-12 border px-1 text-center bg-blue-100 score-input"
                 :disabled="isSubmitted"
-                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"
+                :data-section="'midterm'"
+                :data-row="index"
+                :data-col="i"
+                @keydown.enter.prevent="
+                  focusNextCell('down', 'midterm', index, i)
+                "
+                @keydown.shift.enter.prevent="
+                  focusNextCell('up', 'midterm', index, i)
+                "
+                :class="[
+                  'w-12 border px-1 text-center score-input',
+                  isSubmitted
+                    ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
+                    : 'bg-blue-100',
+                  isQuizScoreInvalid(student, i)
+                    ? 'bg-red-200 border-red-500 text-red-800'
+                    : ''
+                ]"
               />
             </td>
             <!-- Quizzes totals -->
@@ -280,11 +296,21 @@
               <input
                 v-model.number="student.attendance[i]"
                 type="number"
-                min="0"
-                max="1"
-                class="w-12 border px-1 text-center bg-blue-100 score-input"
                 :disabled="isSubmitted"
-                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"
+                :data-section="'midterm'"
+                :data-row="index"
+                :data-col="quizCount + i" 
+                @keydown.enter.prevent="focusNextCell('down', 'midterm', index, quizCount + i)"
+                @keydown.shift.enter.prevent="focusNextCell('up', 'midterm', index, quizCount + i)"
+                :class="[
+                  'w-12 border px-1 text-center score-input',
+                  isSubmitted
+                    ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
+                    : 'bg-blue-100',
+                  isAttendanceScoreInvalid(student, i)
+                    ? 'bg-red-200 border-red-500 text-red-800'
+                    : ''
+                ]"
               />
             </td>
             <!-- Attendance totals -->
@@ -305,9 +331,21 @@
                 type="number"
                 min="0"
                 :max="hpsPerformance"
-                class="w-12 border px-1 text-center bg-blue-100 score-input"
                 :disabled="isSubmitted"
-                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"
+                :data-section="'midterm'"
+                :data-row="index"
+                :data-col="quizCount + attendanceCount"
+                @keydown.enter.prevent="focusNextCell('down', 'midterm', index, quizCount + attendanceCount)"
+                @keydown.shift.enter.prevent="focusNextCell('up', 'midterm', index, quizCount + attendanceCount)"
+                :class="[
+                  'w-12 border px-1 text-center score-input',
+                  isSubmitted
+                    ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
+                    : 'bg-blue-100',
+                  isPerformanceScoreInvalid(student)
+                    ? 'bg-red-200 border-red-500 text-red-800'
+                    : ''
+                ]"
               />
             </td>
             <td class="border p-1 text-center font-semibold bg-gray-200">
@@ -324,9 +362,21 @@
                 type="number"
                 min="0"
                 :max="hpsPrelimScore"
-                class="w-12 border px-1 text-center bg-blue-100 score-input"
                 :disabled="isSubmitted"
-                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"
+                :data-section="'midterm'"
+                :data-row="index"
+                :data-col="quizCount + attendanceCount + 1"
+                @keydown.enter.prevent="focusNextCell('down', 'midterm', index, quizCount + attendanceCount + 1)"
+                @keydown.shift.enter.prevent="focusNextCell('up', 'midterm', index, quizCount + attendanceCount + 1)"
+                :class="[
+                  'w-12 border px-1 text-center score-input',
+                  isSubmitted
+                    ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
+                    : 'bg-blue-100',
+                  isPrelimScoreInvalid(student)
+                    ? 'bg-red-200 border-red-500 text-red-800'
+                    : ''
+                ]"
               />
             </td>
             <td class="border p-1 text-center bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
@@ -335,9 +385,21 @@
                 type="number"
                 min="0"
                 :max="hpsMidtermScore"
-                class="w-12 border px-1 text-center bg-blue-100 score-input"
                 :disabled="isSubmitted"
-                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"
+                :data-section="'midterm'"
+                :data-row="index"
+                :data-col="quizCount + attendanceCount + 2"
+                @keydown.enter.prevent="focusNextCell('down', 'midterm', index, quizCount + attendanceCount + 2)"
+                @keydown.shift.enter.prevent="focusNextCell('up', 'midterm', index, quizCount + attendanceCount + 2)"
+                :class="[
+                  'w-12 border px-1 text-center score-input',
+                  isSubmitted
+                    ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
+                    : 'bg-blue-100',
+                  isMidtermScoreInvalid(student)
+                    ? 'bg-red-200 border-red-500 text-red-800'
+                    : ''
+                ]"
               />
             </td>
             <!-- Major exam totals -->
@@ -484,8 +546,27 @@
 
           <!-- Quizzes -->
           <td v-for="(score, i) in student.quizzes" :key="'fquiz-'+index+'-'+i" class="border p-1 bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
-            <input v-model.number="student.quizzes[i]" type="number" min="0" :max="hpsFinalQuizzes[i] || 100" class="w-12 border px-1 text-center bg-blue-100 score-input" :disabled="isSubmitted"
-                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"/>
+            <input
+              v-model.number="student.quizzes[i]"
+              type="number"
+              min="0"
+              :max="hpsFinalQuizzes[i] || 100"
+              :disabled="isSubmitted"
+              :data-section="'finals'"
+              :data-row="index"
+              :data-col="i"
+              @keydown.enter.prevent="focusNextCell('down', 'finals', index, i)"
+              @keydown.shift.enter.prevent="focusNextCell('up', 'finals', index, i)"
+              :class="[
+                'w-12 border px-1 text-center score-input',
+                isSubmitted
+                  ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
+                  : 'bg-blue-100',
+                isFinalQuizScoreInvalid(student, i)
+                  ? 'bg-red-200 border-red-500 text-red-800'
+                  : ''
+              ]"
+            />
           </td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.totals.quiz.toFixed(0) }}</td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.equivs.quiz.toFixed(0) }}</td>
@@ -493,8 +574,27 @@
 
           <!-- Attendance -->
           <td v-for="(score, i) in student.attendance" :key="'fatt-'+index+'-'+i" class="border p-1 bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
-            <input v-model.number="student.attendance[i]" type="number" min="0" :max="hpsFinalAttendance[i] || 1" class="w-12 border px-1 text-center bg-blue-100 score-input" :disabled="isSubmitted"
-                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"/>
+            <input
+              v-model.number="student.attendance[i]"
+              type="number"
+              min="0"
+              :max="hpsFinalAttendance[i] || 1"
+              :disabled="isSubmitted"
+              :data-section="'finals'"
+              :data-row="index"
+              :data-col="finalQuizCount + i"
+              @keydown.enter.prevent="focusNextCell('down', 'finals', index, finalQuizCount + i)"
+              @keydown.shift.enter.prevent="focusNextCell('up', 'finals', index, finalQuizCount + i)"
+              :class="[
+                'w-12 border px-1 text-center score-input',
+                isSubmitted
+                  ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
+                  : 'bg-blue-100',
+                isFinalAttendanceScoreInvalid(student, i)
+                  ? 'bg-red-200 border-red-500 text-red-800'
+                  : ''
+              ]"
+            />
           </td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.totals.attendance.toFixed(0) }}</td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.equivs.attendance.toFixed(0) }}</td>
@@ -502,16 +602,54 @@
 
           <!-- Performance -->
           <td class="border p-1 text-center bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
-            <input v-model.number="student.performance" type="number" min="0" :max="hpsFinalPerformance" class="w-12 border px-1 text-center bg-blue-100 score-input" :disabled="isSubmitted"
-                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"/>
+            <input
+              v-model.number="student.performance"
+              type="number"
+              min="0"
+              :max="hpsFinalPerformance"
+              :disabled="isSubmitted"
+              :data-section="'finals'"
+              :data-row="index"
+              :data-col="finalQuizCount + finalAttendanceCount"
+              @keydown.enter.prevent="focusNextCell('down', 'finals', index, finalQuizCount + finalAttendanceCount)"
+              @keydown.shift.enter.prevent="focusNextCell('up', 'finals', index, finalQuizCount + finalAttendanceCount)"
+              :class="[
+                'w-12 border px-1 text-center score-input',
+                isSubmitted
+                  ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
+                  : 'bg-blue-100',
+                isFinalPerformanceScoreInvalid(student)
+                  ? 'bg-red-200 border-red-500 text-red-800'
+                  : ''
+              ]"
+            />
           </td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.equivs.performance.toFixed(0) }}</td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.performance.toFixed(0) }}</td>
 
           <!-- Final Exam -->
           <td class="border p-1 text-center bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
-            <input v-model.number="student.finalExam" type="number" min="0" :max="hpsFinalExam" class="w-12 border px-1 text-center bg-blue-100 score-input" :disabled="isSubmitted"
-                :class="{ 'bg-gray-200 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-100': !isSubmitted }"/>
+            <input
+              v-model.number="student.finalExam"
+              type="number"
+              min="0"
+              :max="hpsFinalExam"
+              :disabled="isSubmitted"
+              :data-section="'finals'"
+              :data-row="index"
+              :data-col="finalQuizCount + finalAttendanceCount + 1"
+              @keydown.enter.prevent="focusNextCell('down', 'finals', index, finalQuizCount + finalAttendanceCount + 1)"
+              @keydown.shift.enter.prevent="focusNextCell('up', 'finals', index, finalQuizCount + finalAttendanceCount + 1)"  
+              :class="[
+                'w-12 border px-1 text-center score-input',
+                isSubmitted
+                  ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
+                  : 'bg-blue-100',
+                isFinalExamScoreInvalid(student)
+                  ? 'bg-red-200 border-red-500 text-red-800'
+                  : ''
+              ]"
+            />
           </td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.equivs.exam.toFixed(0) }}</td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.exam.toFixed(0) }}</td>
@@ -717,6 +855,146 @@ const totalFinalAttendanceHPS = computed(() =>
   hpsFinalAttendance.value.reduce((a, b) => a + (Number(b) || 0), 0)
 )
 
+const focusNextCell = (direction, section, rowIndex, colIndex) => {
+  //console.log('focusNextCell called with:', { direction, section, rowIndex, colIndex })
+
+  const list = section === 'midterm' ? students.value : finalStudents.value
+  if (!list || !list.length) return
+
+  const maxRow = list.length - 1
+  let targetRow = direction === 'down' ? rowIndex + 1 : rowIndex - 1
+
+  if (targetRow < 0 || targetRow > maxRow) {
+    //console.log('hit boundary, nothing to focus')
+    return
+  }
+
+  const selector = `input[data-section="${section}"][data-row="${targetRow}"][data-col="${colIndex}"]`
+  //console.log('selector:', selector)
+
+  const el = document.querySelector(selector)
+  if (el) {
+    el.focus()
+    if (typeof el.select === 'function') el.select()
+  } else {
+    //console.log('no element found for selector')
+  }
+}
+
+const isScoreExceeding = (score, hps) => {
+  const s = Number(score)
+  const h = Number(hps)
+  if (!h || Number.isNaN(h)) return false
+  if (score === '' || score === null || score === undefined) return false
+  return !Number.isNaN(s) && s > h
+}
+
+// 🔴 cell invalid helpers (also used for red highlight later)
+const isQuizScoreInvalid = (student, index) =>
+  isScoreExceeding(student.quizzes?.[index], hpsQuizzes.value[index])
+
+const isAttendanceScoreInvalid = (student, index) =>
+  isScoreExceeding(student.attendance?.[index], hpsAttendance.value[index])
+
+const isPerformanceScoreInvalid = (student) =>
+  isScoreExceeding(student.performance, hpsPerformance.value)
+
+const isPrelimScoreInvalid = (student) =>
+  isScoreExceeding(student.prelimScore, hpsPrelimScore.value)
+
+const isMidtermScoreInvalid = (student) =>
+  isScoreExceeding(student.midtermScore, hpsMidtermScore.value)
+
+// Finals
+const isFinalQuizScoreInvalid = (student, index) =>
+  isScoreExceeding(student.quizzes?.[index], hpsFinalQuizzes.value[index])
+
+const isFinalAttendanceScoreInvalid = (student, index) =>
+  isScoreExceeding(student.attendance?.[index], hpsFinalAttendance.value[index])
+
+const isFinalPerformanceScoreInvalid = (student) =>
+  isScoreExceeding(student.performance, hpsFinalPerformance.value)
+
+const isFinalExamScoreInvalid = (student) =>
+  isScoreExceeding(student.finalExam, hpsFinalExam.value)
+
+const hasMidtermScoresExceedingHps = () => {
+  for (const student of students.value) {
+    for (let i = 0; i < quizCount.value; i++) {
+      if (isQuizScoreInvalid(student, i)) return true
+    }
+    for (let i = 0; i < attendanceCount.value; i++) {
+      if (isAttendanceScoreInvalid(student, i)) return true
+    }
+    if (isPerformanceScoreInvalid(student)) return true
+    if (isPrelimScoreInvalid(student)) return true
+    if (isMidtermScoreInvalid(student)) return true
+  }
+  return false
+}
+
+const hasFinalScoresExceedingHps = () => {
+  for (const student of finalStudents.value) {
+    for (let i = 0; i < finalQuizCount.value; i++) {
+      if (isFinalQuizScoreInvalid(student, i)) return true
+    }
+    for (let i = 0; i < finalAttendanceCount.value; i++) {
+      if (isFinalAttendanceScoreInvalid(student, i)) return true
+    }
+    if (isFinalPerformanceScoreInvalid(student)) return true
+    if (isFinalExamScoreInvalid(student)) return true
+  }
+  return false
+}
+
+async function confirmColumnDeletion({ typeLabel, columnLabel, hasHps, hasScores }) {
+  if (!hasHps && !hasScores) return true
+
+  const parts = []
+  if (hasHps) parts.push('an HPS value')
+  if (hasScores) parts.push('scores entered for at least one student')
+  const details = parts.join(' and ')
+
+  const first = await Swal.fire({
+    title: `Delete ${columnLabel}?`,
+    html: `
+      <p class="text-sm text-gray-700">
+        This ${typeLabel.toLowerCase()} already has <b>${details}</b>.<br>
+        Deleting it will permanently remove all data in this column.
+      </p>
+      <p class="mt-2 text-xs text-red-600">
+        This action cannot be undone.
+      </p>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, delete column',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true,
+  })
+
+  if (!first.isConfirmed) return false
+
+  const second = await Swal.fire({
+    title: 'Are you absolutely sure?',
+    html: `
+      <p class="text-sm text-gray-700">
+        All scores and the HPS for <b>${columnLabel}</b> will be lost for every student.
+      </p>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, delete anyway',
+    cancelButtonText: 'Go back',
+    confirmButtonColor: '#b91c1c',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true,
+  })
+
+  return second.isConfirmed
+}
 
 // Add and Remove columns functions
 const addQuizColumn = () => {
@@ -736,25 +1014,57 @@ const addAttendanceColumn = () => {
   })
 }
 
-const removeQuizColumn = () => {
-  if (quizCount.value > 1) {
-    quizCount.value--
-    hpsQuizzes.value.pop()
-    students.value.forEach(student => {
-      student.quizzes.pop()
-    })
-  }
+const removeQuizColumn = async () => {
+  if (quizCount.value <= 1) return
+
+  const idx = quizCount.value - 1
+  const hasHps = !!(Number(hpsQuizzes.value[idx]) || 0)
+  const hasScores = students.value.some(s => {
+    const v = s.quizzes?.[idx]
+    return v !== '' && v !== null && v !== undefined && !Number.isNaN(Number(v))
+  })
+
+  const ok = await confirmColumnDeletion({
+    typeLabel: 'Quiz column',
+    columnLabel: `Q${quizCount.value}`,
+    hasHps,
+    hasScores,
+  })
+  if (!ok) return
+
+  quizCount.value--
+  hpsQuizzes.value.pop()
+  students.value.forEach(s => {
+    s.quizzes.pop()
+  })
 }
 
-const removeAttendanceColumn = () => {
-  if (attendanceCount.value > 1) {
-    attendanceCount.value--
-    hpsAttendance.value.pop()
-    students.value.forEach(student => {
-      student.attendance.pop()
-    })
-  }
+
+const removeAttendanceColumn = async () => {
+  if (attendanceCount.value <= 1) return
+
+  const idx = attendanceCount.value - 1
+  const hasHps = !!(Number(hpsAttendance.value[idx]) || 0)
+  const hasScores = students.value.some(s => {
+    const v = s.attendance?.[idx]
+    return v !== '' && v !== null && v !== undefined && !Number.isNaN(Number(v))
+  })
+
+  const ok = await confirmColumnDeletion({
+    typeLabel: 'Attendance column',
+    columnLabel: `A${attendanceCount.value}`,
+    hasHps,
+    hasScores,
+  })
+  if (!ok) return
+
+  attendanceCount.value--
+  hpsAttendance.value.pop()
+  students.value.forEach(s => {
+    s.attendance.pop()
+  })
 }
+
 function cleanDecimals(obj) {
   for (const key in obj) {
     if (Array.isArray(obj[key])) {
@@ -793,25 +1103,57 @@ const addFinalAttendanceColumn = () => {
   })
 }
 
-const removeFinalQuizColumn = () => {
-  if (finalQuizCount.value > 1) {
-    finalQuizCount.value--
-    hpsFinalQuizzes.value.pop()
-    finalStudents.value.forEach(student => {
-      student.quizzes.pop()
-    })
-  }
+const removeFinalQuizColumn = async () => {
+  if (finalQuizCount.value <= 1) return
+
+  const idx = finalQuizCount.value - 1
+  const hasHps = !!(Number(hpsFinalQuizzes.value[idx]) || 0)
+  const hasScores = finalStudents.value.some(s => {
+    const v = s.quizzes?.[idx]
+    return v !== '' && v !== null && v !== undefined && !Number.isNaN(Number(v))
+  })
+
+  const ok = await confirmColumnDeletion({
+    typeLabel: 'Final quiz column',
+    columnLabel: `Q${finalQuizCount.value}`,
+    hasHps,
+    hasScores,
+  })
+  if (!ok) return
+
+  finalQuizCount.value--
+  hpsFinalQuizzes.value.pop()
+  finalStudents.value.forEach(s => {
+    s.quizzes.pop()
+  })
 }
 
-const removeFinalAttendanceColumn = () => {
-  if (finalAttendanceCount.value > 1) {
-    finalAttendanceCount.value--
-    hpsFinalAttendance.value.pop()
-    finalStudents.value.forEach(student => {
-      student.attendance.pop()
-    })
-  }
+
+const removeFinalAttendanceColumn = async () => {
+  if (finalAttendanceCount.value <= 1) return
+
+  const idx = finalAttendanceCount.value - 1
+  const hasHps = !!(Number(hpsFinalAttendance.value[idx]) || 0)
+  const hasScores = finalStudents.value.some(s => {
+    const v = s.attendance?.[idx]
+    return v !== '' && v !== null && v !== undefined && !Number.isNaN(Number(v))
+  })
+
+  const ok = await confirmColumnDeletion({
+    typeLabel: 'Final attendance column',
+    columnLabel: `A${finalAttendanceCount.value}`,
+    hasHps,
+    hasScores,
+  })
+  if (!ok) return
+
+  finalAttendanceCount.value--
+  hpsFinalAttendance.value.pop()
+  finalStudents.value.forEach(s => {
+    s.attendance.pop()
+  })
 }
+
 
 
 
@@ -845,7 +1187,7 @@ const fetchGrades = async () => {
     loading.value = true
 
     const endpoint = `/grades/${encodeURIComponent(subject)}/${encodeURIComponent(course)}/${encodeURIComponent(year)}/${encodeURIComponent(section)}`
-    console.log(`Fetching grades from: ${endpoint}?teacher_username=${username.value}&ay_id=${ay.value.id}`)
+    //console.log(`Fetching grades from: ${endpoint}?teacher_username=${username.value}&ay_id=${ay.value.id}`)
 
     const res = await axios.get(endpoint, {
       params: {
@@ -952,7 +1294,7 @@ const fetchFinalGrades = async () => {
     loading.value = true
 
     const endpoint = `/finalgrades/${encodeURIComponent(subject)}/${encodeURIComponent(course)}/${encodeURIComponent(year)}/${encodeURIComponent(section)}`
-    console.log(`Fetching FINAL grades from: ${endpoint}?teacher_username=${username.value}&ay_id=${ay.value.id}`)
+    //console.log(`Fetching FINAL grades from: ${endpoint}?teacher_username=${username.value}&ay_id=${ay.value.id}`)
 
     const res = await axios.get(endpoint, {
       params: {
@@ -1213,7 +1555,7 @@ watch(
 
 
 
-
+///////////////////
 
 
 
@@ -1221,6 +1563,20 @@ watch(
 
 
 const submitGrades = async () => {
+  if (hasMidtermScoresExceedingHps() || hasFinalScoresExceedingHps()) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Scores Exceed HPS',
+      html: `
+        <p class="text-sm text-gray-700">
+          Some scores are higher than their column HPS.<br>
+          Please fix the <span class="font-semibold text-red-600">red-highlighted cells</span> before submitting.
+        </p>
+      `,
+      confirmButtonColor: '#ef4444',
+    })
+    return
+  }
   const result = await Swal.fire({
     title: 'Submit Grades?',
     html: `
@@ -1285,6 +1641,20 @@ const submitGrades = async () => {
 
 // Save grades to backend
 const saveGrades = async () => {
+  if (hasMidtermScoresExceedingHps()) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Scores Exceed HPS',
+      html: `
+        <p class="text-sm text-gray-700">
+          At least one student has a score that is higher than the HPS for its column.<br>
+          Please review the <span class="font-semibold text-red-600">red-highlighted cells</span> before saving.
+        </p>
+      `,
+      confirmButtonColor: '#ef4444',
+    })
+    return
+  }
   try {
     // Prepare gradeComponents array from your current HPS states
     const gradeComponents = [];
@@ -1414,6 +1784,20 @@ const saveGrades = async () => {
 };
 
 const saveFinalGrades = async () => {
+  if (hasFinalScoresExceedingHps()) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'Scores Exceed HPS',
+      html: `
+        <p class="text-sm text-gray-700">
+          At least one student has a score that is higher than the HPS for its column.<br>
+          Please review the <span class="font-semibold text-red-600">red-highlighted cells</span> before saving.
+        </p>
+      `,
+      confirmButtonColor: '#ef4444',
+    })
+    return
+  }
   try {
     const gradeComponents = []
 

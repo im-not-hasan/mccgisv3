@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- 👋 Welcome Header -->
     <div v-if="loading" class="text-center py-10">
       <svg class="animate-spin h-8 w-8 text-mccblue mx-auto" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -89,7 +88,12 @@
                 <td class="py-2 px-4 text-center">{{ row.grade ? Number(row.grade).toFixed(1) : "-"  }}</td>
               </tr>
               <tr v-if="paginatedSubjects.length === 0">
-                <td colspan="4" class="text-center py-4">No subjects found.</td>
+                <td colspan="4" class="text-center py-4">
+                  <svg class="animate-spin h-8 w-8 text-mccblue mx-auto" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                  </svg>
+                </td>
               </tr>
             </tbody>
           </table>

@@ -226,19 +226,35 @@ const toggleSort = (key) => {
 }
 
 const deleteStudent = async (id) => {
-  const confirmed = await Swal.fire({
-    title: 'Delete this student?',
-    text: 'This action cannot be undone.',
+  const confirm = await Swal.fire({
+    title: 'Move to Trash?',
+    text: `Move student record to trash?`,
     icon: 'warning',
     showCancelButton: true,
+    confirmButtonColor: '#e3342f',
+    cancelButtonColor: '#6c757d',
     confirmButtonText: 'Yes',
-  })
-  if (confirmed.isConfirmed) {
-    await axios.delete(`/students/${id}`)
-    await fetchStudents()
-    Swal.fire({ toast: true, title: 'Deleted', icon: 'success', position: 'top-end', timer: 2000, showConfirmButton: false })
+  });
+
+  if (confirm.isConfirmed) {
+    try {
+      await axios.delete(`/students/${id}`);
+      await fetchStudents();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Moved to Trash',
+        toast: true,
+        position: 'top-end',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      Swal.fire('Error', 'Could not delete student', 'error');
+    }
   }
-}
+};
+
 
 const editStudent = (student) => {
   editMode.value = true

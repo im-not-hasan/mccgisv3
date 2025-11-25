@@ -93,9 +93,18 @@ class CustomLoginController extends Controller
             $email = DB::table('teacher')->where('teachid', $user->username)->value('email');
         }
 
-        if (!$email) {
-            return response()->json(['error' => 'no_email'], 404);
+        if (
+            !$email ||
+            strtolower(trim($email)) === 'null' ||
+            strtolower(trim($email)) === 'n/a' ||
+            strtolower(trim($email)) === 'none'
+        ) {
+            return response()->json([
+                'error'   => 'no_email',
+                'message' => 'No email is registered for this account. Please contact the registrar or admin to update your email.'
+            ], 404);
         }
+
 
         // 🔹 Generate OTP
         $otp = rand(100000, 999999);
@@ -137,7 +146,17 @@ class CustomLoginController extends Controller
             $email = DB::table('teacher')->where('teachid', $username)->value('email');
         }
 
-        if (!$email) return response()->json(['email' => null]);
+        if (
+            !$email ||
+            strtolower(trim($email)) === 'null' ||
+            strtolower(trim($email)) === 'n/a' ||
+            strtolower(trim($email)) === 'none'
+        ) {
+            return response()->json([
+                'error'   => 'no_email',
+                'message' => 'No email is registered for this account. Please contact the admin to update your email.'
+            ], 404);
+        }
 
         // Masked email for frontend
         $parts = explode('@', $email);

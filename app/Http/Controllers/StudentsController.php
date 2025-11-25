@@ -12,42 +12,68 @@ class StudentsController extends Controller
 {
     public function getStudentStats()
     {
-        // Get student counts by course
+        // Get student counts by course (TOTAL per course)
         $byCourse = DB::table('student')
-            ->select('course', DB::raw('count(*) as count'))
+            ->select('course', DB::raw('COUNT(*) as total'))
+            ->where('archived',0)
+            ->groupBy('course')
+            ->pluck('total', 'course');
+
+        // Get REGULAR student counts by course
+        $byCourseRegular = DB::table('student')
+            ->where('regular', 1)
+            ->where('archived',0)
+            ->select('course', DB::raw('COUNT(*) as count'))
+            ->groupBy('course')
+            ->pluck('count', 'course');
+
+        // Irregular per course 
+        $byCourseIrregular = DB::table('student')
+            ->where('regular', 0)
+            ->where('archived',0)
+            ->select('course', DB::raw('COUNT(*) as count'))
             ->groupBy('course')
             ->pluck('count', 'course');
 
         // Get student counts by gender
         $genderCounts = DB::table('student')
+            ->where('archived',0)
             ->select('gender', DB::raw('count(*) as count'))
             ->groupBy('gender')
             ->pluck('count', 'gender');
         
         $byGender = [
-            'male' => $genderCounts['Male'] ?? 0,
+            'male'   => $genderCounts['Male']   ?? 0,
             'female' => $genderCounts['Female'] ?? 0,
         ];
 
-        // Get total, male, female counts
-        $total = DB::table('student')->count();
-        $male = DB::table('student')->where('gender', 'Male')->count();
-        $female = DB::table('student')->where('gender', 'Female')->count();
+        // Get total, male, female, regular, irregular
+        $total     = DB::table('student')->where('archived',0)->count();
+        $male      = DB::table('student')->where('archived',0)->where('gender', 'Male')->count();
+        $female    = DB::table('student')->where('archived',0)->where('gender', 'Female')->count();
+        $regular   = DB::table('student')->where('archived',0)->where('regular', 1)->count();
+        $irregular = DB::table('student')->where('archived',0)->where('regular', 0)->count();
 
         return response()->json([
-            'byCourse' => $byCourse,
-            'byGender' => $byGender,
+            'byCourse'          => $byCourse,
+            'byCourseRegular'   => $byCourseRegular,
+            'byCourseIrregular' => $byCourseIrregular, 
+            'byGender'          => $byGender,
             'totals' => [
-                'total' => $total,
-                'male' => $male,
-                'female' => $female,
+                'total'     => $total,
+                'male'      => $male,
+                'female'    => $female,
+                'regular'   => $regular,
+                'irregular' => $irregular,
             ],
         ]);
     }
 
+
     public function getAllStudents()
     {
         $students = DB::table('student')
+            ->where('archived', 0)
             ->get();
 
         return response()->json($students);
@@ -57,10 +83,21 @@ class StudentsController extends Controller
     {
         $students = DB::table('student')
             ->where('course', $course)
+            ->where('archived', 0)
             ->get();
 
         return response()->json($students);
     }
+
+    public function getArchivedStudents()
+    {
+        $students = DB::table('student')
+            ->where('archived', 1)
+            ->get();
+
+        return response()->json($students);
+    }
+
 
     public function store(Request $request)
     {
@@ -151,6 +188,22 @@ class StudentsController extends Controller
         }
     }
 
+    public function deleteStudent($id)
+    {
+        $student = DB::table('student')->where('id', $id)->first();
+
+        DB::table('student')
+            ->where('id', $id)
+            ->update([
+                'archived' => 1
+            ]);
+
+        DB::table('login')
+            ->where('username', $student->studid)
+            ->update(['disabled' => 1]);
+
+        return response()->json(['success' => true, 'archived' => true]);
+    }
 
 
     public function destroy($id)
@@ -163,9 +216,44 @@ class StudentsController extends Controller
         return response()->json(['message' => 'Deleted']);
     }
 
+    public function restoreStudent($id)
+    {
+        $student = DB::table('student')->where('id', $id)->first();
+
+        DB::table('student')
+            ->where('id', $id)
+            ->update([
+                'archived' => 0
+            ]);
+
+        DB::table('login')
+            ->where('username', $student->studid)
+            ->update(['disabled' => 0]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function forceDeleteStudent($id)
+{
+    $student = DB::table('student')->where('id', $id)->first();
+
+    // delete related records
+    \Log::info("Deleting student", ['studid' => $student->studid]);
+    DB::table('irregstudentsubject')->where('student_id', $id)->delete();
+    DB::table('login')->where('username', $student->studid)->delete();
+
+    // delete student permanently
+    DB::table('student')->where('id', $id)->delete();
+
+    return response()->json(['success' => true, 'deleted' => true]);
+}
+
+
+
+
+
 
     // Students - View Subjects
-
 
 
     public function studentSubjects(Request $request)
