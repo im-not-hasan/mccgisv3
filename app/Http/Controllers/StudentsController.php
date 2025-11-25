@@ -206,7 +206,7 @@ class StudentsController extends Controller
     }
 
 
-    public function destroy($id)
+    public function destroy($id) // Not Being Used iirc
     {
         $student = DB::table('student')->where('id', $id)->first();
         \Log::info("Deleting student", ['studid' => $student->studid]);

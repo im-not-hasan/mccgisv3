@@ -71,6 +71,68 @@
         </table>
         </div>
 
+        <!-- Teachers Trash -->
+        <div class="p-6 rounded-xl shadow-xl bg-white text-gray-800">
+          <div class="md:flex md:justify-between items-center">
+            <h2 class="text-2xl font-semibold mb-2 md:mb-4 ml-2 text-mccblue">
+              Instructors
+            </h2>
+          </div>
+          <hr class="border-t border-gray-300 mb-4" />
+
+          <table class="w-full border-separate border-spacing-y-2 table-fixed">
+            <thead class="bg-mccblue text-white">
+              <tr>
+                <th class="px-4 py-2 w-1/3 text-left">Instructor ID</th>
+                <th class="px-4 py-2 w-1/3 text-left">Name</th>
+                <th class="px-4 py-2 w-1/3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Loading -->
+              <tr v-if="loadingInstructors">
+                <td colspan="3" class="text-center py-4 text-gray-500">
+                  Loading instructors...
+                </td>
+              </tr>
+
+              <!-- Items -->
+              <tr
+                v-else
+                v-for="t in instructorTrash"
+                :key="t.id"
+                class="bg-white text-gray-800 border hover:bg-gray-100 transition"
+              >
+                <td class="px-4 py-2">{{ t.teachid }}</td>
+                <td class="px-4 py-2">{{ t.fname }} {{ t.lname }}</td>
+                <td class="px-4 py-2 text-right">
+                  <div class="flex justify-end items-center gap-4">
+                    <button
+                      @click="restoreInstructor(t)"
+                      class="text-green-600 hover:text-green-800 text-sm font-medium"
+                    >
+                      Restore
+                    </button>
+                    <button
+                      @click="forceDeleteInstructor(t)"
+                      class="text-red-600 hover:text-red-800 text-sm font-medium"
+                    >
+                      Delete Permanently
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Empty -->
+              <tr v-if="!loadingInstructors && instructorTrash.length === 0">
+                <td colspan="3" class="text-center py-4 text-gray-500">
+                  No instructor records in trash.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
       <!-- Academic Years Trash -->
       <div class="p-6 rounded-xl shadow-xl bg-white text-gray-800">
         <div class="md:flex md:justify-between items-center">
@@ -230,13 +292,16 @@ const fullname = ref('')
 const userLevel = ref('')
 const username = ref('')
 
+const studentTrash = ref([])
+const instructorTrash = ref([])
 const ayTrash = ref([])
 const curriculumTrash = ref([])
-const studentTrash = ref([])
 
 const loadingStud = ref(false)
+const loadingInstructors = ref(false)
 const loadingAY = ref(false)
 const loadingCurr = ref(false)
+
 
 const fetchSession = async () => {
   try {
@@ -263,6 +328,19 @@ const fetchStudentTrash = async () => {
   }
 }
 
+const fetchInstructorTrash = async () => {
+  try {
+    loadingInstructors.value = true
+    console.log('[Trash] fetchInstructorTrash called')
+    const { data } = await axios.get('/instructors/settings/archived')
+    console.log('[Trash] /instructors/settings/archived response:', data)
+    instructorTrash.value = Array.isArray(data) ? data : []
+  } catch (e) {
+    console.error('Failed to fetch instructor trash:', e)
+  } finally {
+    loadingInstructors.value = false
+  }
+}
 
 const fetchAYTrash = async () => {
   try {
@@ -349,6 +427,70 @@ const forceDeleteStudent = async (student) => {
     })
   } catch (e) {
     Swal.fire('Error', 'Could not permanently delete student', 'error')
+  }
+}
+
+const restoreInstructor = async (t) => {
+  const confirm = await Swal.fire({
+    title: 'Restore from Trash?',
+    text: `Restore instructor ${t.fname} ${t.lname} (ID: ${t.teachid})?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#16a34a',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Restore',
+  })
+
+  if (!confirm.isConfirmed) return
+
+  try {
+    await axios.post(`/instructors/settings/${t.id}/restore`)
+    await fetchInstructorTrash()
+    Swal.fire({
+      icon: 'success',
+      title: 'Restored from Trash',
+      toast: true,
+      position: 'top-end',
+      timer: 2000,
+      showConfirmButton: false,
+    })
+  } catch (e) {
+    Swal.fire('Error', 'Could not restore instructor', 'error')
+  }
+}
+
+const forceDeleteInstructor = async (t) => {
+  const confirm = await Swal.fire({
+    title: 'Delete Permanently?',
+    html: `
+      <p class="text-sm text-gray-700">
+        This will <b>permanently delete</b> instructor ${t.fname} ${t.lname}
+        (ID: ${t.teachid}).<br>
+        This action cannot be undone.
+      </p>
+    `,
+    icon: 'error',
+    showCancelButton: true,
+    confirmButtonColor: '#b91c1c',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Delete Permanently',
+  })
+
+  if (!confirm.isConfirmed) return
+
+  try {
+    await axios.delete(`/instructors/settings/${t.id}/force-delete`)
+    await fetchInstructorTrash()
+    Swal.fire({
+      icon: 'success',
+      title: 'Permanently Deleted',
+      toast: true,
+      position: 'top-end',
+      timer: 2000,
+      showConfirmButton: false,
+    })
+  } catch (e) {
+    Swal.fire('Error', 'Could not permanently delete instructor', 'error')
   }
 }
 
@@ -490,8 +632,10 @@ onMounted(async () => {
     window.location.href = '/'
     return
   }
+  fetchStudentTrash()
+  fetchInstructorTrash()
   fetchAYTrash()
   fetchCurriculumTrash()
-  fetchStudentTrash()
+  
 })
 </script>

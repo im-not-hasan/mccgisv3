@@ -14,12 +14,14 @@ class InstructorsController extends Controller
         // Count by department (BSIT, BSBA, BSHM, EDUC)
         $byDepartment = DB::table('teacher')
             ->select('department', DB::raw('COUNT(*) as count'))
+            ->where('archived',0)
             ->groupBy('department')
             ->pluck('count', 'department');
 
         // Count by gender
         $genderCounts = DB::table('teacher')
             ->select('sex', DB::raw('COUNT(*) as count'))
+            ->where('archived',0)
             ->groupBy('sex')
             ->pluck('count', 'sex');
 
@@ -42,10 +44,11 @@ class InstructorsController extends Controller
             ],
         ]);
     }
-        public function getInstructorsByDepartment($department)
+    public function getInstructorsByDepartment($department)
     {
         $instructors = DB::table('teacher')
             ->where('department', $department)
+            ->where('archived',0)
             ->get();
 
         return response()->json($instructors);
@@ -117,7 +120,7 @@ class InstructorsController extends Controller
             }
         }
 
-        public function destroy($id)
+        public function destroy($id) // Not Being Used iirc
         {
             \Log::info("Deleting instructor", ['id' => $id]);
 
@@ -293,6 +296,97 @@ class InstructorsController extends Controller
         {
             $exists = DB::table('teacher')->where('teachid', $teachid)->exists();
             return response()->json(['exists' => $exists]);
+        }
+
+
+        // List archived instructors (for Trash.vue)
+        public function getArchivedInstructors()
+        {
+            \Log::info('[Instructors] getArchivedInstructors() CALLED');
+
+            $instructors = DB::table('teacher')
+                ->where('archived', 1)
+                ->get();
+
+            \Log::info('[Instructors] Archived instructors fetched', [
+                'count'  => $instructors->count(),
+                'sample' => $instructors->take(3),
+            ]);
+
+            return response()->json($instructors);
+        }
+
+        // Move instructor to trash (soft delete)
+        public function deleteInstructor($id)
+        {
+            $teacher = DB::table('teacher')->where('id', $id)->first();
+
+            if (!$teacher) {
+                return response()->json(['success' => false, 'message' => 'Instructor not found'], 404);
+            }
+
+            // archive teacher
+            DB::table('teacher')
+                ->where('id', $id)
+                ->update([
+                    'archived' => 1,
+                ]);
+
+            // disable login if exists
+            DB::table('login')
+                ->where('username', $teacher->teachid)
+                ->update(['disabled' => 1]);
+
+            \Log::info('[Instructors] Moved to trash', ['teachid' => $teacher->teachid]);
+
+            return response()->json(['success' => true, 'archived' => true]);
+        }
+
+        // Restore from trash
+        public function restoreInstructor($id)
+        {
+            $teacher = DB::table('teacher')->where('id', $id)->first();
+
+            if (!$teacher) {
+                return response()->json(['success' => false, 'message' => 'Instructor not found'], 404);
+            }
+
+            DB::table('teacher')
+                ->where('id', $id)
+                ->update([
+                    'archived' => 0,
+                ]);
+
+            DB::table('login')
+                ->where('username', $teacher->teachid)
+                ->update(['disabled' => 0]);
+
+            \Log::info('[Instructors] Restored from trash', ['teachid' => $teacher->teachid]);
+
+            return response()->json(['success' => true]);
+        }
+
+        // Force delete (permanent)
+        public function forceDeleteInstructor($id)
+        {
+            $teacher = DB::table('teacher')->where('id', $id)->first();
+
+            if (!$teacher) {
+                return response()->json(['success' => false, 'message' => 'Instructor not found'], 404);
+            }
+
+            \Log::info('[Instructors] Permanently deleting instructor', ['teachid' => $teacher->teachid]);
+
+            // delete related stuff here if you have any (loads, assignments, etc.)
+            DB::table('assignments')->where('teacher_id', $id)->delete();
+
+            // delete login
+            DB::table('login')->where('username', $teacher->teachid)->delete();
+
+            // delete teacher row
+            DB::table('teacher')->where('id', $id)->delete();
+
+            return response()->json(['success' => true, 'deleted' => true]);
         }
 
         

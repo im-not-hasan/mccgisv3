@@ -145,7 +145,7 @@ Route::post('/instructors', [InstructorsController::class, 'store'])->middleware
 Route::put('/instructors/{id}', [InstructorsController::class, 'update'])->middleware('ensure.logged:admin');
 
 // Delete Instructor
-Route::delete('/instructors/{id}', [InstructorsController::class, 'destroy'])->middleware('ensure.logged:admin');
+Route::delete('/instructors/{id}', [InstructorsController::class, 'deleteInstructor'])->middleware('ensure.logged:admin');
 
 // Check if ID Exists
 Route::get('/api/instructors/check/{teachid}', [InstructorsController::class, 'checkTeachid'])->middleware('ensure.logged:admin');
@@ -343,15 +343,20 @@ Route::get('/viewgrades/download', [StudentsController::class, 'downloadGradeSli
 Route::get('/ay/archived', [SettingsController::class, 'getArchivedAY'])->middleware('ensure.logged:admin');
 Route::get('/curriculums/archived', [SettingsController::class, 'getArchivedCurriculums'])->middleware('ensure.logged:admin');
 Route::get('/students/settings/archived', [StudentsController::class, 'getArchivedStudents'])->middleware('ensure.logged:admin'); // added /settings/ cause it calls other functions above
-
+Route::get('/instructors/settings/archived', [InstructorsController::class, 'getArchivedInstructors'])->middleware('ensure.logged:admin');
 
 
 Route::post('/ay/{id}/restore', [SettingsController::class, 'restoreAcademicYear'])->middleware('ensure.logged:admin');
 Route::post('/curriculums/{id}/restore', [SettingsController::class, 'restoreCurriculum']);
 Route::post('/students/settings/{id}/restore', [StudentsController::class, 'restoreStudent'])->middleware('ensure.logged:admin');
+Route::post('/instructors/settings/{id}/restore', [InstructorsController::class, 'restoreInstructor'])->middleware('ensure.logged:admin');
 
 
 
 Route::delete('/ay/{id}/force-delete', [SettingsController::class, 'forceDeleteAcademicYear'])->middleware('ensure.logged:admin');
 Route::delete('/curriculums/{id}/force-delete', [SettingsController::class, 'forceDeleteCurriculum']);
 Route::delete('/students/settings/{id}/force-delete', [StudentsController::class, 'forceDeleteStudent'])->middleware('ensure.logged:admin');
+Route::delete('/instructors/settings/{id}/force-delete', [InstructorsController::class, 'forceDeleteInstructor'])->middleware('ensure.logged:admin');
+
+
+

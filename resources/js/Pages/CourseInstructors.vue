@@ -253,10 +253,12 @@ const toggleSort = (key) => {
 
 const deleteInstructor = async (id) => {
   const confirm = await Swal.fire({
-    title: 'Remove instructor?',
-    text: 'This action cannot be undone.',
+    title: 'Move to Trash?',
+    text: 'Move instructor record to trash?',
     icon: 'warning',
     showCancelButton: true,
+    confirmButtonColor: '#e3342f',
+    cancelButtonColor: '#6c757d',
     confirmButtonText: 'Yes',
   })
 
@@ -266,7 +268,7 @@ const deleteInstructor = async (id) => {
       await fetchInstructors()
       Swal.fire({
         icon: 'success',
-        title: 'Deleted',
+        title: 'Moved to Trash',
         toast: true,
         position: 'top-end',
         timer: 2000,
