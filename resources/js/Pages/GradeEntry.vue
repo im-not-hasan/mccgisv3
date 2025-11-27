@@ -1495,7 +1495,7 @@ const calculateFinalGrades = () => {
     // PERFORMANCE
     student.totals.performance = Number(student.performance) || 0
     student.equivs.performance = hpsFinalPerformance.value
-      ? (student.totals.performance * 50) / hpsFinalPerformance.value + 50
+      ? (student.totals.performance * 40) / hpsFinalPerformance.value + 60
       : 0
     student.percents.performance = student.equivs.performance * 0.15
 
