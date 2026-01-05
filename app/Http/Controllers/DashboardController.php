@@ -48,12 +48,14 @@ class DashboardController extends Controller
                     // Subject count (distinct subject_ids assigned to this teacher)
                     $counts['subjects'] = DB::table('assignments')
                         ->where('teacher_id', $teacherId)
+                        ->where('ay_id', $activeAy->id)
                         ->distinct('subject_id')
                         ->count('subject_id');
 
                     // Class count (distinct combinations of course + year + section)
                     $counts['class'] = DB::table('assignments')
                         ->where('teacher_id', $teacherId)
+                        ->where('ay_id', $activeAy->id)
                         ->select('course', 'year', 'section')
                         ->distinct()
                         ->count();
