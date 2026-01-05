@@ -250,6 +250,9 @@ class InstructorsController extends Controller
 
        public function teacherClasses(Request $request)
         {
+            $ay = DB::table('ay')
+            ->where('display',1)
+            ->first();
             $username = session('username');
             Log::info('Fetching teacherClasses for username:', [$username]);
 
@@ -268,6 +271,7 @@ class InstructorsController extends Controller
             $classes = DB::table('assignments')
                 ->select('course', 'year', 'section')
                 ->where('teacher_id', $teacherId)
+                ->where('ay_id', $ay->id)
                 ->groupBy('course', 'year', 'section')
                 ->get();
 
