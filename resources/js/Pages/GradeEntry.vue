@@ -1621,7 +1621,7 @@ const submitGrades = async () => {
       confirmButtonColor: '#ef4444',
     });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 };
 
@@ -1641,7 +1641,6 @@ const submitGrades = async () => {
 
 // Save grades to backend
 const saveGrades = async () => {
-  loading.value = true
   if (hasMidtermScoresExceedingHps()) {
     await Swal.fire({
       icon: 'error',
@@ -1782,11 +1781,9 @@ const saveGrades = async () => {
       confirmButtonColor: '#ef4444',
     })
   }
-  loading.value = false
 };
 
 const saveFinalGrades = async () => {
-  loading.value = true
   if (hasFinalScoresExceedingHps()) {
     await Swal.fire({
       icon: 'error',
@@ -1887,12 +1884,10 @@ const saveFinalGrades = async () => {
       confirmButtonColor: '#ef4444',
     })
   }
-  loading.value = false
 }
 
 
 const saveAllGrades = async () => {
-  loading.value = true
   try {
     await Promise.all([
       saveGrades(),
@@ -1968,9 +1963,10 @@ onMounted(async () => {
   if (subject && course && year && section && ay.value?.id) {
     loading.value = true
     await fetchGrades()
-    await fetchFinalGrades()
     loading.value = false
+    await fetchFinalGrades()
   } else {
+
   }
 })
  
