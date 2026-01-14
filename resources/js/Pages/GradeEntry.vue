@@ -1361,7 +1361,7 @@ const fetchFinalGrades = async () => {
   } catch (err) {
     console.error('Failed to fetch final grades:', err)
   } finally {
-    loading.value = false
+    
   }
 }
 function getMidtermGrade(studid) {
