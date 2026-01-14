@@ -1168,6 +1168,8 @@ const removeFinalAttendanceColumn = async () => {
 
 
 const fetchGrades = async () => {
+
+  console.groupEnd()
   try {
     // Fetch session info
     const res = await axios.get('/session?source=gradeentry')
@@ -1185,7 +1187,11 @@ const fetchGrades = async () => {
 
   try {
     loading.value = true
-
+    console.log('%c[MIDTERM] Requesting grades...', 'color:#2563eb', {
+  endpoint,
+  teacher: username.value,
+  ay_id: ay.value?.id,
+})
     const endpoint = `/grades/${encodeURIComponent(subject)}/${encodeURIComponent(course)}/${encodeURIComponent(year)}/${encodeURIComponent(section)}`
     //console.log(`Fetching grades from: ${endpoint}?teacher_username=${username.value}&ay_id=${ay.value.id}`)
 
@@ -1195,6 +1201,12 @@ const fetchGrades = async () => {
         ay_id: ay.value.id,
       },
     })
+    console.groupCollapsed('%c[MIDTERM] fetchGrades RESPONSE', 'color:#16a34a;font-weight:bold')
+console.log('Raw response data:', res.data)
+console.log('students.length:', res.data?.students?.length)
+console.log('gradesData keys:', Object.keys(res.data?.gradesData || {}))
+console.log('summaryGrades keys:', Object.keys(res.data?.summaryGrades || {}))
+console.groupEnd()
 
     isSubmitted.value = Boolean(res.data.submitted)
 
@@ -1265,10 +1277,18 @@ const fetchGrades = async () => {
         remarks: '',
       }
     })
+    console.groupCollapsed('%c[MIDTERM] Students mapped', 'color:#16a34a;font-weight:bold')
+console.log('students.value.length:', students.value.length)
+console.log(
+  'First student sample:',
+  students.value[0]
+)
+console.groupEnd()
+
   } catch (error) {
     console.error('Failed to fetch grades:', error)
   } finally {
-    loading.value = false
+    console.log('%c[MIDTERM] fetchGrades END', 'color:#22c55e;font-weight:bold')
   }
 }
 
@@ -1959,17 +1979,14 @@ const fetchCurrentAY = async () => {
 
 
 onMounted(async () => {
-  loading.value = true
   await fetchCurrentAY()
-
   if (subject && course && year && section && ay.value?.id) {
     await fetchGrades()
     await fetchFinalGrades()
+  } else {
+    loading.value = false
   }
-
-  loading.value = false
 })
-
  
 
 
