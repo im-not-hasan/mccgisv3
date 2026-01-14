@@ -1184,7 +1184,7 @@ const fetchGrades = async () => {
   }
 
   try {
-    loading.value = true
+
 
     const endpoint = `/grades/${encodeURIComponent(subject)}/${encodeURIComponent(course)}/${encodeURIComponent(year)}/${encodeURIComponent(section)}`
     //console.log(`Fetching grades from: ${endpoint}?teacher_username=${username.value}&ay_id=${ay.value.id}`)
@@ -1268,7 +1268,7 @@ const fetchGrades = async () => {
   } catch (error) {
     console.error('Failed to fetch grades:', error)
   } finally {
-    loading.value = false
+
   }
 }
 
@@ -1291,7 +1291,7 @@ const fetchFinalGrades = async () => {
     return
   }
   try {
-    loading.value = true
+
 
     const endpoint = `/finalgrades/${encodeURIComponent(subject)}/${encodeURIComponent(course)}/${encodeURIComponent(year)}/${encodeURIComponent(section)}`
     //console.log(`Fetching FINAL grades from: ${endpoint}?teacher_username=${username.value}&ay_id=${ay.value.id}`)
@@ -1361,7 +1361,7 @@ const fetchFinalGrades = async () => {
   } catch (err) {
     console.error('Failed to fetch final grades:', err)
   } finally {
-    
+
   }
 }
 function getMidtermGrade(studid) {
@@ -1961,8 +1961,10 @@ const fetchCurrentAY = async () => {
 onMounted(async () => {
   await fetchCurrentAY()
   if (subject && course && year && section && ay.value?.id) {
+    loading.value = true
     await fetchGrades()
     await fetchFinalGrades()
+    loading.value = false
   } else {
     loading.value = false
   }
