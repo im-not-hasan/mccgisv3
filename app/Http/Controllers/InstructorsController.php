@@ -285,6 +285,7 @@ class InstructorsController extends Controller
                     ->where('assignments.course', $cls->course)
                     ->where('assignments.year', $cls->year)
                     ->where('assignments.section', $cls->section)
+                    ->where('ay_id', $ay->id)
                     ->select('subject.code', 'subject.title')
                     ->get();
 
