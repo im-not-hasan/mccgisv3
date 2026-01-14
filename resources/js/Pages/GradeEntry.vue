@@ -1959,14 +1959,17 @@ const fetchCurrentAY = async () => {
 
 
 onMounted(async () => {
+  loading.value = true
   await fetchCurrentAY()
+
   if (subject && course && year && section && ay.value?.id) {
     await fetchGrades()
     await fetchFinalGrades()
-  } else {
-    loading.value = false
   }
+
+  loading.value = false
 })
+
  
 
 
