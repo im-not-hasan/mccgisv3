@@ -147,7 +147,7 @@ const subjects = ref([])
 const assignments = ref([])
 
 const courses = ['BSIT','BSBA','BSHM','BSED','BEED']
-const sections = ['North','East','West','South','Northeast','Northwest','Southeast','Southwest']
+const sections = ['North','East','West','South','Northeast','Northwest','Southeast','Southwest','Nihonggo','Mandarin','German','Spanish']
 
 const form = ref({
   teacher_id: props.instructor?.id || '',
