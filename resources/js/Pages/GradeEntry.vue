@@ -1,5 +1,22 @@
 <template>
   <div class="p-6 bg-whitebg">
+    <!-- Autosave Indicator -->
+    <div
+      v-if="autosaveStatus !== 'idle'"
+      class="fixed top-4 right-6 z-50 flex items-center gap-2 px-3 py-1 rounded shadow text-sm transition"
+      :class="{
+        'bg-yellow-100 text-yellow-800': autosaveStatus === 'saving',
+        'bg-green-100 text-green-700': autosaveStatus === 'saved',
+        'bg-red-100 text-red-700': autosaveStatus === 'error',
+      }"
+    >
+      <span v-if="autosaveStatus === 'waiting'">⌛ Waiting to save…</span>
+      <span v-if="autosaveStatus === 'saving'">💾 Saving…</span>
+      <span v-if="autosaveStatus === 'saved'">✅ Saved</span>
+      <span v-if="autosaveStatus === 'error'">⚠ Save failed</span>
+
+    </div>
+
     <!-- Info Section -->
     <div class="grid grid-cols-3 gap-6 mb-6">
       <!-- Subject Code -->
@@ -240,7 +257,12 @@
             <td class="border-none p-1 text-center bg-white">{{ index + 1 }}</td>
             <td class="border-none p-1 sticky left-0 bg-white z-40 w-36">{{ student.lname }}</td>
             <td class="border-none p-1 sticky left-20 bg-white z-40 w-3">{{ student.fname }}</td>
-            <td class="border-none p-1 sticky left-40 bg-white z-40 w-36">{{ student.mname }}</td>
+            <td class="border-none p-1 sticky left-40 bg-white z-40 w-36">{{ student.mname }} <span
+              v-if="student.is_irregular"
+              class=" ml-1 px-1 text-xs bg-red-100 text-red-600 rounded"
+            >
+              IRREG
+            </span></td>
 
             <!-- Quizzes inputs -->
             <td
@@ -255,6 +277,7 @@
                 min="0"
                 :max="hpsQuizzes[i] || 100"
                 :disabled="isSubmitted"
+                @input="queueAutosave(student, 'quiz', i + 1, 'midterm')"
                 :data-section="'midterm'"
                 :data-row="index"
                 :data-col="i"
@@ -297,6 +320,7 @@
                 v-model.number="student.attendance[i]"
                 type="number"
                 :disabled="isSubmitted"
+                @input="queueAutosave(student, 'attendance', i + 1, 'midterm')"
                 :data-section="'midterm'"
                 :data-row="index"
                 :data-col="quizCount + i" 
@@ -332,6 +356,7 @@
                 min="0"
                 :max="hpsPerformance"
                 :disabled="isSubmitted"
+                @input="queueAutosave(student, 'performance', 1, 'midterm')"
                 :data-section="'midterm'"
                 :data-row="index"
                 :data-col="quizCount + attendanceCount"
@@ -363,6 +388,7 @@
                 min="0"
                 :max="hpsPrelimScore"
                 :disabled="isSubmitted"
+                @input="queueAutosave(student, 'exam', 1, 'midterm')"
                 :data-section="'midterm'"
                 :data-row="index"
                 :data-col="quizCount + attendanceCount + 1"
@@ -386,6 +412,7 @@
                 min="0"
                 :max="hpsMidtermScore"
                 :disabled="isSubmitted"
+                @input="queueAutosave(student, 'exam', 2, 'midterm')"
                 :data-section="'midterm'"
                 :data-row="index"
                 :data-col="quizCount + attendanceCount + 2"
@@ -552,6 +579,7 @@
               min="0"
               :max="hpsFinalQuizzes[i] || 100"
               :disabled="isSubmitted"
+              @input="queueAutosave(student, 'quiz', i + 1, 'final')"
               :data-section="'finals'"
               :data-row="index"
               :data-col="i"
@@ -580,6 +608,7 @@
               min="0"
               :max="hpsFinalAttendance[i] || 1"
               :disabled="isSubmitted"
+              @input="queueAutosave(student, 'attendance', i + 1, 'final')"
               :data-section="'finals'"
               :data-row="index"
               :data-col="finalQuizCount + i"
@@ -608,6 +637,7 @@
               min="0"
               :max="hpsFinalPerformance"
               :disabled="isSubmitted"
+              @input="queueAutosave(student, 'performance', 1, 'final')"
               :data-section="'finals'"
               :data-row="index"
               :data-col="finalQuizCount + finalAttendanceCount"
@@ -635,6 +665,7 @@
               min="0"
               :max="hpsFinalExam"
               :disabled="isSubmitted"
+              @input="queueAutosave(student, 'exam', 1, 'final')"
               :data-section="'finals'"
               :data-row="index"
               :data-col="finalQuizCount + finalAttendanceCount + 1"
@@ -683,6 +714,7 @@
 
     <!-- Save / Fullscreen Buttons -->
     <div class="mt-4 text-right absolute bottom-2 right-2">
+      
       <button
         v-if="!isSubmitted"
         @click="saveGrades"
@@ -719,6 +751,7 @@
 
     <!-- Tabs at bottom-left -->
     <div class="absolute bottom-2 left-2 flex space-x-2">
+      
       <button
         @click="activeTab = 'midterm'"
         :class="{
@@ -742,6 +775,7 @@
       <button @click="toggleFullscreen" class="fullscreen-btn mr-5 px-2 py-2">
         ⛶ Fullscreen
       </button>
+      
     </div>
   </div>
 </template>
@@ -792,6 +826,122 @@ import Swal from 'sweetalert2'
 import axios from 'axios'
 const activeTab = ref('midterm') // default active tab
 const isSubmitted = ref(false)
+const autosaveEnabled = ref(false)
+const hasGradeComponents = ref(false)
+
+const autosaveStatus = ref('idle') 
+// 'idle' | 'saving' | 'saved' | 'error'
+const autosaveBuffer = ref(new Map())
+// key: `${term}-${student_id}-${component_type}-${component_index}`
+// value: payload object
+const autosaveTimer = ref(null)
+
+const toggleAutosave = async (e) => {
+  const wantsToEnable = e.target.checked
+
+  // 🚫 Trying to enable autosave with no components yet
+  if (wantsToEnable && !hasGradeComponents.value) {
+    await Swal.fire({
+      icon: 'info',
+      title: 'Autosave not ready yet',
+      html: `
+        <p class="text-sm text-gray-700">
+          Autosave requires existing grade components.<br><br>
+          Please click <b>Save Midterm Grades</b> or <b>Save Final Grades</b>
+          at least once to initialize the grading structure.
+        </p>
+      `,
+      confirmButtonColor: '#2563eb',
+    })
+
+    autosaveEnabled.value = false
+    return
+  }
+
+  autosaveEnabled.value = wantsToEnable
+}
+
+const queueAutosave = (student, componentType, componentIndex, term) => {
+  if (!autosaveEnabled.value || isSubmitted.value) return
+
+
+  // 1️⃣ Build a unique key per cell
+  const key = `${term}-${student.studid}-${componentType}-${componentIndex}`
+
+  // 2️⃣ Store / overwrite latest value in buffer
+  autosaveBuffer.value.set(key, {
+    teacher_username: username.value,
+    subject_code: subject,
+    course,
+    year,
+    section,
+    ay_id: ay.value.id,
+    term,
+    student_id: student.studid,
+    component_type: componentType,
+    component_index: componentIndex,
+    score:
+      componentType === 'quiz'
+        ? student.quizzes?.[componentIndex - 1]
+        : componentType === 'attendance'
+        ? student.attendance?.[componentIndex - 1]
+        : componentType === 'performance'
+        ? student.performance
+        : componentType === 'exam'
+        ? term === 'midterm'
+          ? componentIndex === 1
+            ? student.prelimScore
+            : student.midtermScore
+          : student.finalExam
+        : null,
+  })
+
+  // 3️⃣ User has pending edits → waiting
+  autosaveStatus.value = 'waiting'
+
+  // 4️⃣ Reset debounce timer
+  if (autosaveTimer.value) {
+    clearTimeout(autosaveTimer.value)
+  }
+
+  autosaveTimer.value = setTimeout(runAutosave, 5000)
+}
+const runAutosave = async () => {
+  if (autosaveBuffer.value.size === 0) return
+
+  autosaveStatus.value = 'saving'
+
+  try {
+    // Convert Map → Array
+    const payload = Array.from(autosaveBuffer.value.values())
+
+    await axios.post('/grades/autosave', {
+      teacher_username: username.value,
+      subject_code: subject,
+      course,
+      year,
+      section,
+      ay_id: ay.value.id,
+
+      changes: payload,
+    })
+
+
+    autosaveBuffer.value.clear()
+    autosaveStatus.value = 'saved'
+
+    setTimeout(() => {
+      if (autosaveStatus.value === 'saved') {
+        autosaveStatus.value = 'idle'
+      }
+    }, 2000)
+
+  } catch (err) {
+    console.error('Autosave failed', err)
+    autosaveStatus.value = 'error'
+  }
+}
+
 
 const totalColumns = computed(() => {
   // Fixed columns: 4 (No, Lastname, Firstname, Middlename)
@@ -1186,6 +1336,7 @@ const fetchGrades = async () => {
   try {
 
 
+
     const endpoint = `/grades/${encodeURIComponent(subject)}/${encodeURIComponent(course)}/${encodeURIComponent(year)}/${encodeURIComponent(section)}`
     //console.log(`Fetching grades from: ${endpoint}?teacher_username=${username.value}&ay_id=${ay.value.id}`)
 
@@ -1197,7 +1348,8 @@ const fetchGrades = async () => {
     })
 
     isSubmitted.value = Boolean(res.data.submitted)
-
+    hasGradeComponents.value = Boolean(res.data.hasComponents)
+    autosaveEnabled.value = hasGradeComponents.value
     const data = res.data
     cleanDecimals(data.gradesData);
     cleanDecimals(data.gradeComponents);
@@ -1368,6 +1520,9 @@ function getMidtermGrade(studid) {
   const mid = students.value.find(s => s.studid === studid)
   return mid ? mid.midtermGrade || 0 : 0
 }
+watch(activeTab, () => {
+  autosaveStatus.value = 'idle'
+})
 
 
 

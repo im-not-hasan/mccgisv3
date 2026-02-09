@@ -70,7 +70,7 @@ const departmentCards = ref([
   { label: 'BSIT', count: 0, color: '#dc2626' },
   { label: 'BSBA', count: 0, color: '#16a34a' },
   { label: 'BSHM', count: 0, color: '#ea580c' },
-  { label: 'EDUC', count: 0, color: '#1e3a8a' },
+  { label: 'BSED', count: 0, color: '#1e3a8a' },
 ])
 
 
@@ -89,7 +89,7 @@ const fetchSession = async () => {
 
 const fetchInstructorStats = async () => {
   try {
-    const res = await axios.get('/instructor-stats') // endpoint you’ll create
+    const res = await axios.get('/instructor-stats') 
     departmentData.value = res.data.byDepartment
     genderData.value = res.data.byGender
     overallCounts.value = res.data.totals

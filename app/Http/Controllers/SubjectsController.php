@@ -78,7 +78,20 @@ class SubjectsController extends Controller
         $subjects = DB::table('subject')
             ->where('curriculum',$curriculum->curriculum)
             ->where('course', $course)
-            ->select('id', 'code', 'title', 'lecunit', 'labunit', 'totalunit', 'pre', 'year', 'semester')
+            ->select('id', 'code', 'title', 'lecunit', 'labunit', 'totalunit', 'pre', 'year', 'semester', 'course')
+            ->get();
+
+        return response()->json($subjects);
+    }
+
+    public function getAllSubjects()
+    {
+        $curriculum = DB::table('curriculums')
+            ->where('display',1)
+            ->first();
+        $subjects = DB::table('subject')
+            ->where('curriculum',$curriculum->curriculum)
+            ->select('id', 'code', 'title', 'lecunit', 'labunit', 'totalunit', 'pre', 'year', 'semester', 'course')
             ->get();
 
         return response()->json($subjects);

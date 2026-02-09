@@ -160,7 +160,8 @@ const form = ref({
 
 const fetchSubjects = async () => {
   try {
-    const res = await axios.get(`/api/allsubjects/${props.course}`)
+    const res = await axios.get(`/api/allsubjects`)
+    // const res = await axios.get(`/api/allsubjects/${props.course}`)   <---- for filtering by course
     subjects.value = res.data
   } catch (e) {
     console.error('Failed to load subjects', e)
@@ -180,9 +181,15 @@ const filterSubjects = () => {
 const selectSubject = (subject) => {
   form.value.subject_id = subject.id
   form.value.subject_input = subject.title
+
+  
+  form.value.course = subject.course
+  form.value.year = subject.year
+
   subjectSearch.value = subject.title
   filteredSubjects.value = []
 }
+
 
 
 const fetchAssignments = async () => {

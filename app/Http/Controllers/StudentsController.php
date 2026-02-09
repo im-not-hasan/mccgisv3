@@ -369,48 +369,71 @@ class StudentsController extends Controller
             }
 
         } else {
-            //Log::info('Processing as IRREGULAR student');
-
-            // Fetch their custom subjects
+            // Processing as IRREGULAR student
             $irregSubjects = DB::table('irregstudentsubject')
                 ->where('student_id', $studentId)
                 ->get();
 
-            //Log::debug('Irregular student subjects fetched:', [$irregSubjects]);
-
             foreach ($irregSubjects as $irreg) {
-                // Get subject details
                 $subj = DB::table('subject')->where('id', $irreg->subject_id)->first();
-                //Log::debug("Subject details for irreg subject_id {$irreg->subject_id}:", [$subj]);
+                if (!$subj) continue;
 
-                if ($subj) {
-                    // Get teacher_id from assignments
-                    $teacherId = DB::table('assignments')
-                        ->where('subject_id', $subj->id)
-                        ->where('course', $course)
-                        ->where('year', $year)
-                        ->where('section', $section)
-                        ->value('teacher_id');
+                // Use year/section from irreg assignment, not the student's main record
+                $irregYear = $irreg->year;
+                $irregSection = $irreg->section;
 
-                    //Log::debug("Teacher ID for subject {$subj->code}:", [$teacherId]);
+                // Resolve teacher based on subject + irreg year/section
+                $teacherId = DB::table('assignments')
+                    ->where('subject_id', $subj->id)
+                    ->where('year', $irregYear)
+                    ->where('section', $irregSection)
+                    ->value('teacher_id');
 
-                    // Get teacher details
-                    if ($teacherId) {
-                        $teacher = DB::table('teacher')->where('id', $teacherId)->first();
-                        Log::debug("Teacher details for teacher_id {$teacherId}:", [$teacher]);
-                        $instructorName = $teacher ? "{$teacher->fname} {$teacher->lname}" : "N/A";
-                    } else {
-                        $instructorName = "N/A";
-                    }
-
-                    $subjects[] = [
-                        'code' => $subj->code,
-                        'title' => $subj->title,
-                        'instructor' => $instructorName,
-                    ];
+                if ($teacherId) {
+                    $teacher = DB::table('teacher')->where('id', $teacherId)->first();
+                    $instructorName = $teacher ? "{$teacher->fname} {$teacher->lname}" : "N/A";
+                } else {
+                    $instructorName = "N/A";
                 }
+
+                // Fetch grades using the same irreg year/section/course
+                $midterm = DB::table('grades')
+                    ->where('student_id', $studentId)
+                    ->where('subject_id', $subj->id)
+                    ->where('teacher_id', $teacherId)
+                    ->where('ay_id', $ay_id)
+                    ->value('midterm');
+
+                $final = DB::table('grades')
+                    ->where('student_id', $studentId)
+                    ->where('subject_id', $subj->id)
+                    ->where('teacher_id', $teacherId)
+                    ->where('ay_id', $ay_id)
+                    ->value('final');
+
+                $overall = DB::table('grades')
+                    ->where('student_id', $studentId)
+                    ->where('subject_id', $subj->id)
+                    ->where('teacher_id', $teacherId)
+                    ->where('ay_id', $ay_id)
+                    ->value('overall');
+
+                if ($overall <= 0.00 || !$overall) {
+                    $grade = ($final <= 0.00 || !$final) ? $midterm : $final;
+                } else {
+                    $grade = $overall;
+                }
+
+                $subjects[] = [
+                    'code' => $subj->code,
+                    'title' => $subj->title,
+                    'instructor' => $instructorName,
+                    'grade' => $grade,
+                    'irregular' => true, // optional flag to mark for frontend indicator
+                ];
             }
         }
+
 
         Log::info('Final subjects array to return:', [$subjects]);
 
@@ -419,7 +442,13 @@ class StudentsController extends Controller
 
 
 
-    public function getSections()
+    public function getSections($course)
+    {
+        $sections = DB::table('class')->where('course', $course)->select('section')->distinct()->pluck('section');
+        return response()->json($sections);
+    }
+
+    public function getAllSections()
     {
         $sections = DB::table('class')->select('section')->distinct()->pluck('section');
         return response()->json($sections);

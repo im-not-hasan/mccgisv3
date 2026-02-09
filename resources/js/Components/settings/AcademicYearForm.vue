@@ -98,14 +98,7 @@ const submitForm = async () => {
   try {
     const { data } = await axios.get('/ay')
 
-    // ✅ Check total AY limit
-    if (data.length >= 4) {
-      return Swal.fire({
-        icon: 'error',
-        title: 'Limit Reached',
-        text: 'You can only have up to 4 academic year entries.',
-      })
-    }
+    
 
     // ✅ Convert input semester to number for direct comparison
     const inputSemester = parseInt(form.value.semester)

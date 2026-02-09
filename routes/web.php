@@ -103,6 +103,7 @@ return Inertia::render('CourseSubjects', ['course' => $course]);
 })->middleware('ensure.logged:admin|registrar');
 Route::get('/api/subjects/{course}', [SubjectsController::class, 'getSubjectsByCourse'])->middleware('ensure.logged:admin|registrar');
 Route::get('/api/allsubjects/{course}', [SubjectsController::class, 'getAllSubjectsByCourse'])->middleware('ensure.logged:admin|registrar');
+Route::get('/api/allsubjects', [SubjectsController::class, 'getAllSubjects'])->middleware('ensure.logged:admin|registrar');
 
 //Save Subject
 Route::post('/subjects', [SubjectsController::class, 'store'])->middleware('ensure.logged:admin');
@@ -117,6 +118,7 @@ Route::put('/subjects/{id}', [SubjectsController::class, 'update'])->middleware(
 Route::post('/api/irregstudentsubject', [IrregStudentSubjectController::class, 'store'])->middleware('ensure.logged:admin');
 Route::put('/api/irregstudentsubject/{studid}', [IrregStudentSubjectController::class, 'update'])->middleware('ensure.logged:admin');
 Route::get('/api/irregstudentsubject/{studid}', [IrregStudentSubjectController::class, 'getStudentSubjects'])->middleware('ensure.logged');
+Route::delete('/api/irregstudentsubject/{studid}', [IrregStudentSubjectController::class, 'destroy']);
 
 
 
@@ -242,7 +244,8 @@ Route::get('/student/dashboard', [DashboardController::class, 'studentDashboard'
 // View Students' Subjects
 Route::get('/student-subjects', [StudentsController::class, 'studentSubjects'])->middleware('ensure.logged');
 
-Route::get('/api/sections', [StudentsController::class, 'getSections'])->middleware('ensure.logged');
+Route::get('/api/sections/{course}', [StudentsController::class, 'getSections'])->middleware('ensure.logged');
+Route::get('/api/allsections', [StudentsController::class, 'getAllSections'])->middleware('ensure.logged');
 Route::get('/api/academicyears', [StudentsController::class, 'getAcademicYears'])->middleware('ensure.logged');
 
 // Check if ID Exists
@@ -289,6 +292,12 @@ Route::post('/grades/save', [GradeController::class, 'saveGrades'])->name('grade
 Route::post('/finalgrades/save', [GradeController::class, 'saveFinalGrades'])->name('grades.save')->middleware('ensure.logged:teacher');
 // Submit final grades (locked)
 Route::post('/grades/submit', [GradeController::class, 'submitGrades'])->middleware('ensure.logged:teacher');
+
+
+// Autosave
+Route::post('/grades/autosave', [GradeController::class, 'autosave'])
+    ->middleware('ensure.logged:teacher');
+
 
 
 

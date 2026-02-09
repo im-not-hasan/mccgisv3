@@ -223,11 +223,47 @@
                   <li
                     v-for="subject in selectedSubjects"
                     :key="subject.id"
-                    class="flex justify-between items-center bg-gray-100 text-gray-800 px-3 py-2 mb-2 rounded-md"
+                    class="flex items-center gap-3 bg-gray-100 text-gray-800 px-3 py-2 mb-2 rounded-md"
                   >
-                    <span>{{ subject.title }}</span>
-                    <button @click="removeSubject(subject)" class="text-red-500 hover:text-red-700">-</button>
+                    <!-- Subject title -->
+                    <span class="flex-1">{{ subject.title }}</span>
+
+                    <!-- Year (readonly) -->
+                    <select
+                      v-model="subject.year"
+                      disabled
+                      class="w-20 rounded-md border border-gray-300 bg-gray-200 text-gray-700 px-2 py-1 cursor-not-allowed"
+                    >
+                      <option :value="subject.year">
+                        {{ subject.year }}
+                      </option>
+                    </select>
+
+                    <!-- Section (required) -->
+                    <select
+                      v-model="subject.section"
+                      class="w-[120px] rounded-md border border-gray-300 bg-white text-gray-800 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-mccblue"
+                      required
+                    >
+                      <option value="" disabled>Section</option>
+                      <option
+                        v-for="sec in availableSections"
+                        :key="sec"
+                        :value="sec"
+                      >
+                        {{ sec }}
+                      </option>
+                    </select>
+
+                    <!-- Remove -->
+                    <button
+                      @click="removeSubject(subject)"
+                      class="text-red-500 hover:text-red-700 font-bold"
+                    >
+                      -
+                    </button>
                   </li>
+
                 </ul>
 
                 <!-- Save Button -->
@@ -263,6 +299,8 @@ import axios from 'axios'
 import Swal from 'sweetalert2'
 
 const emit = defineEmits(['submitted', 'cancelEdit'])
+const availableSections = ['East', 'West', 'North', 'South', 'Northeast', 'Northwest', 'Southeast', 'Southwest']
+
 
 const props = defineProps({
   course: String,
@@ -281,6 +319,18 @@ const filteredSubjects = ref([])
 const sections = ref([])
 const academicYears = ref([])
 
+const originalRegular = ref(null)
+
+watch(
+  () => props.studentToEdit,
+  (student) => {
+    if (student) {
+      originalRegular.value = student.regular
+    }
+  },
+  { immediate: true }
+)
+
 const filterSubjects = () => {
   const search = subjectSearch.value.toLowerCase()
   filteredSubjects.value = allSubjects.value.filter(s =>
@@ -290,11 +340,18 @@ const filterSubjects = () => {
 
 const selectSubject = (subject) => {
   if (!selectedSubjects.value.some(s => s.id === subject.id)) {
-    selectedSubjects.value.push(subject)
+    selectedSubjects.value.push({
+      id: subject.id,
+      title: subject.title,
+      year: subject.year,     // AUTO from subject table
+      section: '',            // REQUIRED input
+    })
   }
+
   subjectSearch.value = ''
   filteredSubjects.value = []
 }
+
 
 const addSubject = () => {
   if (selectedSubjectToAdd.value && !selectedSubjects.value.find(s => s.id === selectedSubjectToAdd.value.id)) {
@@ -387,6 +444,25 @@ const handleSubmit = async () => {
       return
     }
   }
+  // 🚨 IRREG → REGULAR confirmation
+  const becameRegular =
+    props.editMode &&
+    originalRegular.value === 0 &&
+    form.value.regular === 1
+
+  if (becameRegular) {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Confirm Action',
+      text: 'This will remove all irregular subject assignments for the current Academic Year. Continue?',
+      showCancelButton: true,
+      confirmButtonText: 'Yes',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#1e40af',
+    })
+
+    if (!result.isConfirmed) return
+  }
 
   if (form.value.regular == 0 && currentStep.value == 1) {
     await fetchSubjects()
@@ -397,6 +473,10 @@ const handleSubmit = async () => {
   try {
     if (props.editMode && props.studentToEdit?.id) {
       await axios.put(`/students/${props.studentToEdit.id}`, form.value)
+      // 🔥 Cleanup irregular subjects AFTER save
+      if (becameRegular) {
+        await axios.delete(`/api/irregstudentsubject/${form.value.studid}`)
+      }
       Swal.fire({
         icon: 'success',
         title: 'Student Updated',
@@ -449,20 +529,30 @@ const fetchSubjects = async () => {
 }
 
 const submitIrregSubjects = async () => {
+  // Validation
+  const incomplete = selectedSubjects.value.some(
+    s => !s.section
+  )
+
+  if (incomplete) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Incomplete Selection',
+      text: 'Please select a section for all subjects.',
+    })
+    return
+  }
+
   try {
     if (props.editMode) {
-      // Update student data first
       await axios.put(`/students/${props.studentToEdit.id}`, form.value)
 
-      // Update irregular subjects
       await axios.put(`/api/irregstudentsubject/${form.value.studid}`, {
         subjects: selectedSubjects.value,
       })
     } else {
-      // Add new student first
       await axios.post('/students', form.value)
 
-      // Add irregular subjects
       await axios.post('/api/irregstudentsubject', {
         studid: form.value.studid,
         subjects: selectedSubjects.value,
@@ -486,6 +576,7 @@ const submitIrregSubjects = async () => {
     Swal.fire('Error', 'Could not save irregular student subjects', 'error')
   }
 }
+
 
 
 // Auto-format Student ID as YYYY-NNNN and block excess characters
@@ -534,7 +625,7 @@ const updateIrregSubjects = async () => {
 
 const fetchSections = async () => {
   try {
-    const res = await axios.get('/api/sections')
+    const res = await axios.get(`/api/sections/${form.value.course}`)
     sections.value = res.data
   } catch (error) {
     console.error('Failed to fetch sections:', error)

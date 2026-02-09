@@ -10,9 +10,12 @@ use App\Models\Student;
 
 class GradeController extends Controller
 {
-
+    
     public function getGrades(Request $request, $subject_id, $course, $year, $section)
-    {   
+    {
+        
+
+
         $teacherUsername = $request->query('teacher_username');
         $teacher = DB::table('teacher')->where('teachid', $teacherUsername)->first();
         $teacher_id = $teacher->id;
@@ -25,23 +28,60 @@ class GradeController extends Controller
         //     'ay' => $ay_id,
         //     'teacher_id' => $teacher_id,
         // ]);
-
+        
         try {
             // Fetch students in the class
-            $students = DB::table('student')
+            $regularStudents = DB::table('student')
                 ->where('course', $course)
                 ->where('year', $year)
                 ->where('section', $section)
-                ->orderBy('gender')
+                ->where('regular', 1)
+                ->select(
+                    'student.*',
+                    DB::raw('0 as is_irregular')
+                )
+                ->orderBy('gender', 'desc')
                 ->orderBy('lname')
                 ->get();
 
-            Log::info("Students fetched", [
-                'count' => $students->count(),
-            ]);
+            $irregularStudents = DB::table('irregstudentsubject as iss')
+                ->join('student as s', 'iss.student_id', '=', 's.id')
+                ->join('subject as sub', 'iss.subject_id', '=', 'sub.id')
+                ->where('sub.code', $subject_id)
+                ->where('iss.year', $year)
+                ->where('iss.section', $section)
+                ->where('iss.ay_id', $ay_id)
+                ->select(
+                    's.*',
+                    DB::raw('1 as is_irregular')
+                )
+                ->get();
+
+            $students = $regularStudents
+                ->merge($irregularStudents)
+                ->unique('id')
+                ->sortBy([
+                    ['gender', 'desc'],
+                    ['lname', 'asc'],
+                ])
+                ->values();
+
+            // Log::info("Students fetched", [
+            //     'count' => $students->count(),
+            // ]);
             $active_curriculum = DB::table('curriculums')->where('display',1)->first();
             $subject = DB::table('subject')->where('code', $subject_id)->where('curriculum',$active_curriculum->curriculum)->first();
             $subjectid = $subject->id;
+            $hasComponents = DB::table('grade_components')
+                ->where('subject_id', $subjectid)
+                ->where('teacher_id', $teacher_id)
+                ->where('course', $course)
+                ->where('year', $year)
+                ->where('section', $section)
+                ->where('ay_id', $ay_id)
+                ->exists();
+
+
             // Fetch grade components filtered by subject, teacher, course, year, section, ay
             Log::info("Searching for Components where", [
                 'subject_id' => $subjectid,
@@ -83,8 +123,36 @@ class GradeController extends Controller
             }
 
             // Determine quiz and attendance count, defaulting if none found
-            $quizCount = isset($gradeComponents['quiz']) ? count($gradeComponents['quiz']) : 5;
-            $attendanceCount = isset($gradeComponents['attendance']) ? count($gradeComponents['attendance']) : 10;
+            if (!isset($gradeComponents['quiz'])) {
+                Log::info('No quiz components found — defaulting quizCount to 5', [
+                    'subject_id' => $subjectid,
+                    'teacher_id' => $teacher_id,
+                    'course' => $course,
+                    'year' => $year,
+                    'section' => $section,
+                    'ay_id' => $ay_id,
+                ]);
+            }
+
+            if (!isset($gradeComponents['attendance'])) {
+                Log::info('No attendance components found — defaulting attendanceCount to 10', [
+                    'subject_id' => $subjectid,
+                    'teacher_id' => $teacher_id,
+                    'course' => $course,
+                    'year' => $year,
+                    'section' => $section,
+                    'ay_id' => $ay_id,
+                ]);
+            }
+
+            $quizCount = isset($gradeComponents['quiz'])
+                ? count($gradeComponents['quiz'])
+                : 5;
+
+            $attendanceCount = isset($gradeComponents['attendance'])
+                ? count($gradeComponents['attendance'])
+                : 10;
+
             $examCount = isset($gradeComponents['exam']) ? count($gradeComponents['exam']) : 0;
             Log::info("Grade Components counts", [
                 'quizCount' => $quizCount,
@@ -199,9 +267,9 @@ class GradeController extends Controller
                 }
             }
 
-            Log::info('Processed Grades Data:', ['gradesData' => $gradesData]);
+            // Log::info('Processed Grades Data:', ['gradesData' => $gradesData]);
 
-            Log::info('Processed Grades Data JSON:', ['gradesData' => json_encode($gradesData)]);
+            // Log::info('Processed Grades Data JSON:', ['gradesData' => json_encode($gradesData)]);
 
             return response()->json([
                 'students' => $students,
@@ -211,6 +279,7 @@ class GradeController extends Controller
                 'attendanceCount' => $attendanceCount,
                 'term' => "midterm",
                 'submitted' => $isSubmitted ? 1 : 0, // ✅ return as integer
+                'hasComponents' => $hasComponents,
             ]);
         } catch (\Exception $e) {
             Log::error("Error in getGrades(): " . $e->getMessage());
@@ -235,17 +304,37 @@ class GradeController extends Controller
 
         try {
             // Fetch students in the class
-            $students = DB::table('student')
+            $regularStudents = DB::table('student')
                 ->where('course', $course)
                 ->where('year', $year)
                 ->where('section', $section)
-                ->orderBy('gender')
+                ->where('regular', 1)
+                ->orderBy('gender', 'desc')
                 ->orderBy('lname')
                 ->get();
 
-            Log::info("Students fetched", [
-                'count' => $students->count(),
-            ]);
+            $irregularStudents = DB::table('irregstudentsubject as iss')
+                ->join('student as s', 'iss.student_id', '=', 's.id')
+                ->join('subject as sub', 'iss.subject_id', '=', 'sub.id')
+                ->where('sub.code', $subject_id)
+                ->where('iss.year', $year)
+                ->where('iss.section', $section)
+                ->where('iss.ay_id', $ay_id)
+                ->select('s.*')
+                ->get();
+                
+            $students = $regularStudents
+                ->merge($irregularStudents)
+                ->unique('id')
+                ->sortBy([
+                    ['gender', 'desc'],
+                    ['lname', 'asc'],
+                ])
+                ->values();
+
+            // Log::info("Students fetched", [
+            //     'count' => $students->count(),
+            // ]);
             $active_curriculum = DB::table('curriculums')->where('display',1)->first();
             $subject = DB::table('subject')->where('code', $subject_id)->where('curriculum',$active_curriculum->curriculum)->first();
             $subjectid = $subject->id;
@@ -395,9 +484,9 @@ class GradeController extends Controller
                 }
             }
 
-            Log::info('Processed Grades Data:', ['gradesData' => $gradesData]);
+            // Log::info('Processed Grades Data:', ['gradesData' => $gradesData]);
 
-            Log::info('Processed Grades Data JSON:', ['gradesData' => json_encode($gradesData)]);
+            // Log::info('Processed Grades Data JSON:', ['gradesData' => json_encode($gradesData)]);
 
             return response()->json([
                 'students' => $students,
@@ -764,8 +853,103 @@ class GradeController extends Controller
 
 
 
+// Autosave (BATCH)
+public function autosave(Request $request)
+{
+    // 🔐 Validate teacher once
+    $teacher = DB::table('teacher')
+        ->where('teachid', $request->teacher_username)
+        ->first();
 
+    if (!$teacher) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
 
+    // 📦 Expect batched changes
+    $changes = $request->input('changes', []);
+
+    if (!is_array($changes) || empty($changes)) {
+        return response()->json(['skipped' => true]);
+    }
+
+    // 📚 Resolve curriculum + subject once
+    $curriculum = DB::table('curriculums')->where('display', 1)->first();
+    if (!$curriculum) {
+        return response()->json(['error' => 'Curriculum not found'], 404);
+    }
+
+    $subject = DB::table('subject')
+        ->where('code', $request->subject_code)
+        ->where('curriculum', $curriculum->curriculum)
+        ->first();
+
+    if (!$subject) {
+        return response()->json(['error' => 'Subject not found'], 404);
+    }
+
+    DB::beginTransaction();
+
+    try {
+        foreach ($changes as $change) {
+
+            // 👨‍🎓 Student
+            $student = DB::table('student')
+                ->where('studid', $change['student_id'])
+                ->first();
+
+            if (!$student) {
+                continue; // skip invalid student
+            }
+
+            // 🧩 Grade component
+            $component = DB::table('grade_components')
+                ->where('subject_id', $subject->id)
+                ->where('teacher_id', $teacher->id)
+                ->where('course', $request->course)
+                ->where('year', $request->year)
+                ->where('section', $request->section)
+                ->where('ay_id', $request->ay_id)
+                ->where('component_type', $change['component_type'])
+                ->where('component_index', $change['component_index'])
+                ->where('term', $change['term'])
+                ->first();
+
+            if (!$component) {
+                continue; // skip missing component
+            }
+
+            // 💾 Upsert grade
+            DB::table('grades_data')->updateOrInsert(
+                [
+                    'grade_component_id' => $component->id,
+                    'student_id' => $student->id,
+                ],
+                [
+                    'score' => $change['score'],
+                    'updated_at' => now(),
+                ]
+            );
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'saved' => true,
+            'count' => count($changes),
+        ]);
+
+    } catch (\Throwable $e) {
+        DB::rollBack();
+
+        \Log::error('Autosave failed', [
+            'error' => $e->getMessage(),
+        ]);
+
+        return response()->json([
+            'error' => 'Autosave failed',
+        ], 500);
+    }
+}
 
 
 
