@@ -5,8 +5,8 @@
       <div class="flex-1 bg-white rounded-lg shadow p-4">
         <h2 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Student Statistics</h2>
         <div class="grid grid-cols-1 md:grid-cols-2">
-          <v-chart :option="courseChartOptions" autoresize class="h-[300px]" />
-          <v-chart :option="genderChartOptions" autoresize class="h-[300px]" />
+          <v-chart :option="courseChartOptions" autoresize class="h-[400px]" />
+          <v-chart :option="genderChartOptions" autoresize class="h-[400px]" />
         </div>
       </div>
 
@@ -21,7 +21,7 @@
           :useSvg="true"
           :bgColor="course.color"
           :gradientSize="0"
-          class="cursor-pointer md:w-[300px] h-[90px]"
+          class="cursor-pointer md:w-[300px] h-[80px]"
           @click="goToCourse(course.label)"
         />
         <CardSpotlight
@@ -31,14 +31,14 @@
         :useSvg="true"
         bgColor="#3b82f6"
         :gradientSize="0"
-        class="cursor-pointer h-[90px]"
+        class="cursor-pointer h-[75px]"
         @click="router.visit(`/students/all`)"
       />
       </div>
     </div>
 
     <!-- Totals -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 px-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2 px-4">
       <div class="bg-white shadow p-4 rounded-lg text-center">
         <h3 class="text-gray-700 font-semibold text-lg">Total Students</h3>
         <p class="text-3xl font-bold text-mcclightblue">{{ overallCounts.total }}</p>
@@ -91,7 +91,8 @@ const courseCards = ref([
   { label: 'BSIT', count: 0, color: '#dc2626' },
   { label: 'BSBA', count: 0, color: '#16a34a' },
   { label: 'BSHM', count: 0, color: '#ea580c' },
-  { label: 'EDUC', count: 0, color: '#1e3a8a' },
+  { label: 'BSED', count: 0, color: '#1e3a8a' },
+  { label: 'BEED', count: 0, color: '#0ea5e9' }
 ])
 
 

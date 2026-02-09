@@ -5,8 +5,8 @@
       <div class="flex-1 bg-white rounded-lg shadow p-4">
         <h2 class="text-sm md:text-lg font-semibold text-gray-700 mb-2">Instructor Statistics</h2>
         <div class="grid grid-cols-1 md:grid-cols-2">
-          <v-chart :option="departmentChartOptions" autoresize class="h-[300px]" />
-          <v-chart :option="genderChartOptions" autoresize class="h-[300px]"/>
+          <v-chart :option="departmentChartOptions" autoresize class="h-[400px]" />
+          <v-chart :option="genderChartOptions" autoresize class="h-[400px]"/>
         </div>
       </div>
 
@@ -71,6 +71,7 @@ const departmentCards = ref([
   { label: 'BSBA', count: 0, color: '#16a34a' },
   { label: 'BSHM', count: 0, color: '#ea580c' },
   { label: 'BSED', count: 0, color: '#1e3a8a' },
+  { label: 'BEED', count: 0, color: '#0ea5e9' }
 ])
 
 
