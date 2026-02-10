@@ -1,55 +1,144 @@
 <template>
   <div class="p-6 bg-whitebg">
-    <!-- Autosave Indicator -->
-    <div
-      v-if="autosaveStatus !== 'idle'"
-      class="fixed top-4 right-6 z-50 flex items-center gap-2 px-3 py-1 rounded shadow text-sm transition"
-      :class="{
-        'bg-yellow-100 text-yellow-800': autosaveStatus === 'saving',
-        'bg-green-100 text-green-700': autosaveStatus === 'saved',
-        'bg-red-100 text-red-700': autosaveStatus === 'error',
-      }"
-    >
-      <span v-if="autosaveStatus === 'waiting'">⌛ Waiting to save…</span>
-      <span v-if="autosaveStatus === 'saving'">💾 Saving…</span>
-      <span v-if="autosaveStatus === 'saved'">✅ Saved</span>
-      <span v-if="autosaveStatus === 'error'">⚠ Save failed</span>
-
-    </div>
-
+    
+    
     <!-- Info Section -->
-    <div class="grid grid-cols-3 gap-6 mb-6">
-      <!-- Subject Code -->
-      <div class="bg-blue-100 text-mcclightblue rounded-md p-4 shadow-md flex flex-col justify-between">
-        <div class="text-xl text-mccblue font-bold">Subject Code: {{ subject }}</div>
-        <div class="text-md font-bold"></div>
+    <!-- <div class="mb-3 border rounded bg-blue-100  text-mccblue text-md px-4 py-2 flex flex-wrap gap-x-6 gap-y-1"> -->
+    <div class="mb-3 border rounded bg-gray-100 px-4 py-2 flex items-center justify-between text-sm">
+
+      <!-- LEFT: Class Info -->
+      <div class="flex flex-wrap gap-x-6 gap-y-1">
+        <div><strong>Subject:</strong> {{ subject }}</div>
+        <div><strong>Course:</strong> {{ course }} {{ year }} – {{ section }}</div>
       </div>
 
-      <!-- Course-Year -->
-      <div class="bg-blue-100 text-mcclightblue rounded-md p-4 shadow-md flex flex-col justify-between">
-        <div class="text-xl text-mccblue font-bold">Course & Year: {{ course }} - {{ year }}</div>
-        <div class="text-md font-bold">Section: {{ section }}</div>
-      </div>
+      <!-- RIGHT: Actions -->
+      <div class="flex items-center gap-2 relative">
+        <!-- SAVE DROPDOWN -->
+        <div class="flex items-center gap-2 relative" ref="toolbarRef">
+          <div
+            v-if="autosaveStatus !== 'idle'"
+            class="flex items-center gap-2 px-3 py-1 rounded shadow text-sm transition"
+            :class="{
+              'bg-yellow-100 text-yellow-800': autosaveStatus === 'saving',
+              'bg-green-100 text-green-700': autosaveStatus === 'saved',
+              'bg-red-100 text-red-700': autosaveStatus === 'error',
+            }"
+          >
+            <span v-if="autosaveStatus === 'waiting'">⌛ Waiting to save…</span>
+            <span v-if="autosaveStatus === 'saving'">💾 Saving…</span>
+            <span v-if="autosaveStatus === 'saved'">✅ Saved</span>
+            <span v-if="autosaveStatus === 'error'">⚠ Save failed</span>
+          </div>
+          <div class="relative">
+            <button
+              @click="toggleSaveMenu"
+              class="excel-btn flex items-center gap-1"
+              :class="{
+                'ring-2 ring-blue-400 animate-pulse':
+                  activeTab === 'midterm'
+                    ? !hasComponents.midterm || structureDirty.midterm
+                    : !hasComponents.finals || structureDirty.finals
+              }"
+            >
+              Save <span class="text-xs">▼</span>
+            </button>
 
-      <!-- Semester/Academic Year -->
-      <div class="bg-blue-100 text-mcclightblue rounded-md p-4 shadow-md flex flex-col justify-between">
-        <div class="text-xl text-mccblue font-bold">
-          Semester: {{
-            ay.semester === '1'
-              ? 'First Semester'
-              : ay.semester === '2'
-              ? 'Second Semester'
-              : ay.semester === '3'
-              ? 'Summer'
-              : 'Loading...'
-          }}
+
+            <div
+              v-if="showSaveMenu"
+              class="absolute right-0 mt-1 w-36 bg-white border shadow z-50"
+            >
+              <button
+                class="dropdown-item"
+                @click="saveGrades"
+              >
+                Save Midterm
+              </button>
+              <button
+                class="dropdown-item"
+                @click="saveFinalGrades"
+              >
+                Save Finals
+              </button>
+            </div>
+          </div>
+
+          <!-- SUBMIT DROPDOWN -->
+          <div class="relative">
+            <button @click="toggleSubmitMenu" class="excel-btn flex items-center gap-1">
+              Submit <span class="text-xs">▼</span>
+            </button>
+
+            <div
+              v-if="showSubmitMenu"
+              class="absolute right-0 mt-1 w-40 bg-white border shadow z-50"
+            >
+              <button
+                class="dropdown-item"
+                @click="submitMidterm"
+              >
+                Submit Midterm
+              </button>
+              <button
+                class="dropdown-item"
+                @click="submitGrades"
+              >
+                Submit Finals
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="text-md font-bold">Academic Year: {{ ay.academicyear }}</div>
+        <!-- DIVIDER -->
+        <div class="h-5 w-px bg-gray-300 mx-1"></div>
+
+        <!-- TABS -->
+        <button
+          @click="activeTab='midterm'"
+          :class="{
+              'bg-gray-300 text-black': activeTab === 'midterm',
+              'bg-gray-100 text-black hover:bg-gray-200 ': activeTab !== 'midterm'
+            }"
+          class="px-3 py-1 border text-md"
+        >
+          Midterm
+        </button>
+
+        <button
+          @click="activeTab='finals'"
+          :class="{
+              'bg-gray-300 text-black': activeTab === 'finals',
+              'bg-gray-100 text-black hover:bg-gray-200 ': activeTab !== 'finals'
+            }"
+          class="px-3 py-1 border text-md"
+        >
+          Finals
+        </button>
+
+        <!-- HELP -->
+        <button
+          class="excel-icon-btn border-gray-300"
+          title="Help"
+          @click="openHelpModal"
+        >
+          ?
+        </button>
+
+        <!-- FULLSCREEN -->
+        <button
+          class="excel-icon-btn border-gray-300"
+          title="Fullscreen"
+          @click="toggleFullscreen"
+        >
+          ⛶
+        </button>
+
       </div>
     </div>
+
 
     
-    <div class="overflow-auto border rounded-lg max-h-[535px]" ref="gradesTable">
+    <div class="overflow-auto border rounded-lg max-h-[630px] w-full" ref="gradesTable">
       <!-- MIDTERM TABLE -->
       <table  v-if="activeTab === 'midterm'" class="min-w-full border-collapse text-xs" >
         <thead>
@@ -495,21 +584,21 @@
 
         <!-- Column Labels -->
         <tr>
-          <th v-for="n in finalQuizCount" :key="'fq-label-'+n" class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">Q{{ n }}</th>
+          <th v-for="n in finalQuizCount" :key="'fq-label-'+n" class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">Q{{ n }}</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">TOTAL</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">30%</th>
 
-          <th v-for="n in finalAttendanceCount" :key="'fa-label-'+n" class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">A{{ n }}</th>
+          <th v-for="n in finalAttendanceCount" :key="'fa-label-'+n" class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">A{{ n }}</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">TOTAL</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">15%</th>
 
-          <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">100</th>
+          <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">100</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">15%</th>
 
-          <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">FINAL SCORE</th>
+          <th class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">FINAL SCORE</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">40%</th>
 
@@ -525,32 +614,32 @@
 
         <!-- HPS Row -->
         <tr>
-          <td v-for="(hps, i) in hpsFinalQuizzes" :key="'fhps-quiz-'+i" class="border p-1 bg-blue-200 sticky top-8 z-30"  :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">
+          <td v-for="(hps, i) in hpsFinalQuizzes" :key="'fhps-quiz-'+i" class="border p-1 bg-orange-200 sticky top-8 z-30"  :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
             <input v-model.number="hpsFinalQuizzes[i]" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" :disabled="isSubmitted"
-                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"/>
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-orange-200': !isSubmitted }"/>
           </td>
           <td class="border p-1 bg-gray-300 text-center font-semibold sticky top-8 z-30">{{ totalFinalQuizHPS.toFixed(0) }}</td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">30</td>
 
-          <td v-for="(hps, i) in hpsFinalAttendance" :key="'fhps-att-'+i" class="border p-1 bg-blue-200 sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">
+          <td v-for="(hps, i) in hpsFinalAttendance" :key="'fhps-att-'+i" class="border p-1 bg-orange-200 sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
             <input v-model.number="hpsFinalAttendance[i]" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" :disabled="isSubmitted"
-                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"/>
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-orange-200': !isSubmitted }"/>
           </td>
           <td class="border p-1 bg-gray-300 text-center font-semibold sticky top-8 z-30">{{ totalFinalAttendanceHPS.toFixed(0) }}</td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">15</td>
 
-          <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">
-            <input v-model.number="hpsFinalPerformance" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" :disabled="isSubmitted"
-                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"/>
+          <td class="border p-1 bg-orange-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
+            <input v-model.number="hpsFinalPerformance" type="number" min="0" class="w-12 border px-1 text-center bg-orange-200 score-input" :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-orange-200': !isSubmitted }"/>
           </td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">15</td>
 
-          <td class="border p-1 bg-blue-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-blue-200': !isSubmitted }">
-            <input v-model.number="hpsFinalExam" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" :disabled="isSubmitted"
-                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-blue-200': !isSubmitted }"/>
+          <td class="border p-1 bg-orange-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
+            <input v-model.number="hpsFinalExam" type="number" min="0" class="w-12 border px-1 text-center bg-orange-200 score-input" :disabled="isSubmitted"
+                :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-orange-200': !isSubmitted }"/>
           </td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">40</td>
@@ -572,7 +661,7 @@
           <td class="border-none p-1 sticky left-40 bg-white z-40 w-36">{{ student.mname }}</td>
 
           <!-- Quizzes -->
-          <td v-for="(score, i) in student.quizzes" :key="'fquiz-'+index+'-'+i" class="border p-1 bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
+          <td v-for="(score, i) in student.quizzes" :key="'fquiz-'+index+'-'+i" class="border p-1 bg-orange-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
             <input
               v-model.number="student.quizzes[i]"
               type="number"
@@ -589,7 +678,7 @@
                 'w-12 border px-1 text-center score-input',
                 isSubmitted
                   ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
-                  : 'bg-blue-100',
+                  : 'bg-orange-100',
                 isFinalQuizScoreInvalid(student, i)
                   ? 'bg-red-200 border-red-500 text-red-800'
                   : ''
@@ -601,7 +690,7 @@
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.quiz.toFixed(0) }}</td>
 
           <!-- Attendance -->
-          <td v-for="(score, i) in student.attendance" :key="'fatt-'+index+'-'+i" class="border p-1 bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
+          <td v-for="(score, i) in student.attendance" :key="'fatt-'+index+'-'+i" class="border p-1 bg-orange-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
             <input
               v-model.number="student.attendance[i]"
               type="number"
@@ -618,7 +707,7 @@
                 'w-12 border px-1 text-center score-input',
                 isSubmitted
                   ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
-                  : 'bg-blue-100',
+                  : 'bg-orange-100',
                 isFinalAttendanceScoreInvalid(student, i)
                   ? 'bg-red-200 border-red-500 text-red-800'
                   : ''
@@ -630,7 +719,7 @@
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.attendance.toFixed(0) }}</td>
 
           <!-- Performance -->
-          <td class="border p-1 text-center bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
+          <td class="border p-1 text-center bg-orange-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
             <input
               v-model.number="student.performance"
               type="number"
@@ -647,7 +736,7 @@
                 'w-12 border px-1 text-center score-input',
                 isSubmitted
                   ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
-                  : 'bg-blue-100',
+                  : 'bg-orange-100',
                 isFinalPerformanceScoreInvalid(student)
                   ? 'bg-red-200 border-red-500 text-red-800'
                   : ''
@@ -658,7 +747,7 @@
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.performance.toFixed(0) }}</td>
 
           <!-- Final Exam -->
-          <td class="border p-1 text-center bg-blue-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-blue-100': !isSubmitted }">
+          <td class="border p-1 text-center bg-orange-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
             <input
               v-model.number="student.finalExam"
               type="number"
@@ -675,7 +764,7 @@
                 'w-12 border px-1 text-center score-input',
                 isSubmitted
                   ? 'bg-gray-200 cursor-not-allowed border-none focus:border-none'
-                  : 'bg-blue-100',
+                  : 'bg-orange-100',
                 isFinalExamScoreInvalid(student)
                   ? 'bg-red-200 border-red-500 text-red-800'
                   : ''
@@ -710,72 +799,6 @@
         </tr>
       </tbody>
     </table>
-    </div>
-
-    <!-- Save / Fullscreen Buttons -->
-    <div class="mt-4 text-right absolute bottom-2 right-2">
-      
-      <button
-        v-if="!isSubmitted"
-        @click="saveGrades"
-        :disabled="loading"
-        class="bg-mccblue hover:bg-mccdarkblue text-white px-4 py-2 rounded transition mr-3"
-      >
-        Save Midterm Grades
-      </button>
-      <button
-        v-if="!isSubmitted"
-        @click="saveFinalGrades"
-        :disabled="loading"
-        class="bg-mccblue hover:bg-mccdarkblue text-white px-4 py-2 rounded transition mr-3"
-      >
-        Save Final Grades
-      </button>
-      <button
-        v-if="!isSubmitted"
-        @click="saveAllGrades"
-        :disabled="loading"
-        class="bg-mccblue hover:bg-mccdarkblue text-white px-4 py-2 rounded transition mr-3"
-      >
-        Save All Grades
-      </button>
-      <button
-        v-if="!isSubmitted"
-        @click="submitGrades"
-        :disabled="loading"
-        class="bg-mccblue hover:bg-mccdarkblue text-white px-4 py-2 rounded transition"
-      >
-        Mark as Submitted
-      </button>
-    </div>
-
-    <!-- Tabs at bottom-left -->
-    <div class="absolute bottom-2 left-2 flex space-x-2">
-      
-      <button
-        @click="activeTab = 'midterm'"
-        :class="{
-          'bg-gray-300 text-black': activeTab === 'midterm',
-          'bg-gray-100 text-gray-600': activeTab !== 'midterm'
-        }"
-        class="px-3 py-1 rounded border"
-      >
-        Prelim-Midterm
-      </button>
-      <button
-        @click="activeTab = 'finals'"
-        :class="{
-          'bg-gray-300 text-black': activeTab === 'finals',
-          'bg-gray-100 text-gray-600': activeTab !== 'finals'
-        }"
-        class="px-3 py-1 rounded border"
-      >
-        Finals
-      </button>
-      <button @click="toggleFullscreen" class="fullscreen-btn mr-5 px-2 py-2">
-        ⛶ Fullscreen
-      </button>
-      
     </div>
   </div>
 </template>
@@ -820,21 +843,64 @@
 
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onBeforeUnmount, reactive } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import axios from 'axios'
 const activeTab = ref('midterm') // default active tab
 const isSubmitted = ref(false)
 const autosaveEnabled = ref(false)
-const hasGradeComponents = ref(false)
+const hasComponents = reactive({
+  midterm: false,
+  finals: false,
+})
+const structureDirty = reactive({
+  midterm: false,
+  finals: false,
+})
 
-const autosaveStatus = ref('idle') 
-// 'idle' | 'saving' | 'saved' | 'error'
+const autosaveStatus = ref('idle')  // 'idle' | 'saving' | 'saved' | 'error'
+const hasShownSaveHint = ref(false)
+
 const autosaveBuffer = ref(new Map())
 // key: `${term}-${student_id}-${component_type}-${component_index}`
 // value: payload object
 const autosaveTimer = ref(null)
+
+const showSaveMenu = ref(false)
+const showSubmitMenu = ref(false)
+const toolbarRef = ref(null)
+
+const closeMenus = () => {
+  showSaveMenu.value = false
+  showSubmitMenu.value = false
+}
+
+const handleClickOutside = (e) => {
+  if (!toolbarRef.value) return
+
+  if (!toolbarRef.value.contains(e.target)) {
+    closeMenus()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+const toggleSaveMenu = () => {
+  showSaveMenu.value = !showSaveMenu.value
+  showSubmitMenu.value = false
+}
+
+const toggleSubmitMenu = () => {
+  showSubmitMenu.value = !showSubmitMenu.value
+  showSaveMenu.value = false
+}
+
 
 const toggleAutosave = async (e) => {
   const wantsToEnable = e.target.checked
@@ -862,7 +928,31 @@ const toggleAutosave = async (e) => {
 }
 
 const queueAutosave = (student, componentType, componentIndex, term) => {
-  if (!autosaveEnabled.value || isSubmitted.value) return
+  const currentTerm = term === 'final' ? 'finals' : 'midterm'
+
+  // ⛔ Autosave blocked until structure exists for THIS term
+  if (!hasComponents[currentTerm] || structureDirty[currentTerm] || isSubmitted.value) {
+
+    // 👀 This is NOT the debounce waiting — this is structural
+    autosaveStatus.value = 'idle'
+
+    if (!hasShownSaveHint[currentTerm]) {
+      hasShownSaveHint[currentTerm] = true
+
+      Swal.fire({
+        toast: false,
+        position: 'center',
+        icon: 'info',
+        title: `Autosave for ${currentTerm} will start after you click Save`,
+        text: 'Please set number of quizzes and attendances, enter their highest scores, and then click Save to enable autosave.',
+        showConfirmButton: true,
+      })
+    }
+
+    return
+  }
+
+
 
 
   // 1️⃣ Build a unique key per cell
@@ -1153,6 +1243,9 @@ const addQuizColumn = () => {
   students.value.forEach(student => {
     student.quizzes.push('')
   })
+
+  structureDirty.midterm = true
+  hasComponents.midterm = false
 }
 
 
@@ -1162,6 +1255,9 @@ const addAttendanceColumn = () => {
   students.value.forEach(student => {
     student.attendance.push('')
   })
+
+  structureDirty.midterm = true
+  hasComponents.midterm = false
 }
 
 const removeQuizColumn = async () => {
@@ -1187,6 +1283,9 @@ const removeQuizColumn = async () => {
   students.value.forEach(s => {
     s.quizzes.pop()
   })
+
+  structureDirty.midterm = true
+  hasComponents.midterm = false
 }
 
 
@@ -1213,6 +1312,9 @@ const removeAttendanceColumn = async () => {
   students.value.forEach(s => {
     s.attendance.pop()
   })
+
+  structureDirty.midterm = true
+  hasComponents.midterm = false
 }
 
 function cleanDecimals(obj) {
@@ -1242,6 +1344,9 @@ const addFinalQuizColumn = () => {
   finalStudents.value.forEach(student => {
     student.quizzes.push('')
   })
+
+  structureDirty.finals = true
+  hasComponents.finals = false
 }
 
 
@@ -1251,6 +1356,9 @@ const addFinalAttendanceColumn = () => {
   finalStudents.value.forEach(student => {
     student.attendance.push('')
   })
+
+  structureDirty.finals = true
+  hasComponents.finals = false
 }
 
 const removeFinalQuizColumn = async () => {
@@ -1276,6 +1384,9 @@ const removeFinalQuizColumn = async () => {
   finalStudents.value.forEach(s => {
     s.quizzes.pop()
   })
+
+  structureDirty.finals = true
+  hasComponents.finals = false
 }
 
 
@@ -1302,6 +1413,9 @@ const removeFinalAttendanceColumn = async () => {
   finalStudents.value.forEach(s => {
     s.attendance.pop()
   })
+
+  structureDirty.finals = true
+  hasComponents.finals = false
 }
 
 
@@ -1348,8 +1462,8 @@ const fetchGrades = async () => {
     })
 
     isSubmitted.value = Boolean(res.data.submitted)
-    hasGradeComponents.value = Boolean(res.data.hasComponents)
-    autosaveEnabled.value = hasGradeComponents.value
+    hasComponents.midterm = Boolean(res.data.hasComponents)
+    autosaveEnabled.value = hasComponents.midterm
     const data = res.data
     cleanDecimals(data.gradesData);
     cleanDecimals(data.gradeComponents);
@@ -1454,7 +1568,7 @@ const fetchFinalGrades = async () => {
         ay_id: ay.value.id,
       },
     })
-
+    hasComponents.finals = Object.keys(res.data.gradeComponents || {}).length > 0
     const data = res.data
     cleanDecimals(data.gradesData)
     cleanDecimals(data.gradeComponents)
@@ -1927,6 +2041,9 @@ const saveGrades = async () => {
       text: 'All midterm grades were successfully saved.',
       confirmButtonColor: '#2563eb',
     })
+    hasComponents.midterm = true
+    structureDirty.midterm = false
+
   } catch (error) {
     console.error('Failed to save grades:', error);
     Swal.fire({
@@ -2030,6 +2147,9 @@ const saveFinalGrades = async () => {
       text: 'All final grades were successfully saved.',
       confirmButtonColor: '#2563eb',
     })  
+    hasComponents.finals = true
+    structureDirty.finals = false
+
   } catch (err) {
     console.error('Failed to save final grades:', err)
     Swal.fire({
@@ -2041,32 +2161,6 @@ const saveFinalGrades = async () => {
   }
 }
 
-
-const saveAllGrades = async () => {
-  try {
-    await Promise.all([
-      saveGrades(),
-      saveFinalGrades()
-    ])
-
-    await Swal.fire({
-      icon: 'success',
-      title: 'All Grades Saved!',
-      text: 'Both Midterm and Final Grades were successfully saved.',
-      confirmButtonColor: '#2563eb',
-    })
-  } catch (error) {
-    console.error('Failed to save both grade sets:', error)
-    Swal.fire({
-      icon: 'error',
-      title: 'Save Failed!',
-      text: 'Something went wrong while saving both grade sets.',
-      confirmButtonColor: '#ef4444',
-    })
-  } finally {
-    loading.value = false
-  }
-}
 
 
 
@@ -2173,6 +2267,18 @@ input[type=number]::-webkit-outer-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+.excel-btn {
+  @apply px-3 py-1 border bg-gray-100 hover:bg-gray-200 text-sm;
+}
+
+.dropdown-item {
+  @apply block w-full text-left px-3 py-1 text-sm hover:bg-gray-100;
+}
+
+.excel-icon-btn {
+  @apply px-2 py-1 border bg-gray-100 hover:bg-gray-200 text-sm;
+}
+
 
 .score-input {
   width: 35px;      /* smaller width */
