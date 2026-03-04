@@ -1,7 +1,6 @@
 <template>
   <div class="p-6 bg-whitebg">
     
-    
     <!-- Info Section -->
     <!-- <div class="mb-3 border rounded bg-blue-100  text-mccblue text-md px-4 py-2 flex flex-wrap gap-x-6 gap-y-1"> -->
     <div class="mb-3 border rounded bg-gray-100 px-4 py-2 flex items-center justify-between text-sm">
@@ -15,6 +14,7 @@
       <!-- RIGHT: Actions -->
       <div class="flex items-center gap-2 relative">
         <!-- SAVE DROPDOWN -->
+         
         <div class="flex items-center gap-2 relative" ref="toolbarRef">
           <div
             v-if="autosaveStatus !== 'idle'"
@@ -136,10 +136,8 @@
       </div>
     </div>
 
-
-    
     <div class="overflow-auto border rounded-lg max-h-[630px] w-full" ref="gradesTable">
-      <!-- MIDTERM TABLE -->
+      <!------------ MIDTERM TABLE ------------>
       <table  v-if="activeTab === 'midterm'" class="min-w-full border-collapse text-xs" >
         <thead>
           <!-- Header Row -->
@@ -155,7 +153,7 @@
               <button
                 v-if="!isSubmitted"
                 @click="addQuizColumn"
-                class="ml-2 bg-green-500 text-white px-2 py-0.5 rounded text-xs"
+                class="ml-2 bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-xs"
                 title="Add Quiz Column"
               >
                 +
@@ -163,7 +161,7 @@
               <button
                 v-if="!isSubmitted"
                 @click="removeQuizColumn"
-                class="ml-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs"
+                class="ml-1 bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs"
                 title="Remove Quiz Column"
                 :disabled="quizCount <= 1"
               >
@@ -177,7 +175,7 @@
               <button
                 v-if="!isSubmitted"
                 @click="addAttendanceColumn"
-                class="ml-2 bg-green-500 text-white px-2 py-0.5 rounded text-xs"
+                class="ml-2 bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-xs"
                 title="Add Attendance Column"
               >
                 +
@@ -185,7 +183,7 @@
               <button
                 v-if="!isSubmitted"
                 @click="removeAttendanceColumn"
-                class="ml-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs"
+                class="ml-1 bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs"
                 title="Remove Attendance Column"
                 :disabled="attendanceCount <= 1"
               >
@@ -550,9 +548,6 @@
       </table>
 
 
-
-
-
       <!------------ FINALS TABLE ------------>
       <table v-if="activeTab === 'finals'" class="min-w-full border-collapse text-xs">
       <thead>
@@ -565,15 +560,15 @@
           <!-- Quizzes -->
           <th :colspan="finalQuizCount + 3" class="bg-gray-300 border p-2">
             QUIZZES
-            <button v-if="!isSubmitted" @click="addFinalQuizColumn" class="ml-2 bg-green-500 text-white px-2 py-0.5 rounded text-xs" title="Add Quiz Column">+</button>
-            <button v-if="!isSubmitted" @click="removeFinalQuizColumn" class="ml-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs" title="Remove Quiz Column" :disabled="finalQuizCount <= 1">-</button>
+            <button v-if="!isSubmitted" @click="addFinalQuizColumn" class="ml-2 bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-xs" title="Add Quiz Column">+</button>
+            <button v-if="!isSubmitted" @click="removeFinalQuizColumn" class="ml-1 bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs" title="Remove Quiz Column" :disabled="finalQuizCount <= 1">-</button>
           </th>
 
           <!-- Attendance -->
           <th :colspan="finalAttendanceCount + 3" class="bg-gray-300 border p-2">
             ATTENDANCE
-            <button v-if="!isSubmitted" @click="addFinalAttendanceColumn" class="ml-2 bg-green-500 text-white px-2 py-0.5 rounded text-xs" title="Add Attendance Column">+</button>
-            <button v-if="!isSubmitted" @click="removeFinalAttendanceColumn" class="ml-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs" title="Remove Attendance Column" :disabled="finalAttendanceCount <= 1">-</button>
+            <button v-if="!isSubmitted" @click="addFinalAttendanceColumn" class="ml-2 bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-xs" title="Add Attendance Column">+</button>
+            <button v-if="!isSubmitted" @click="removeFinalAttendanceColumn" class="ml-1 bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs" title="Remove Attendance Column" :disabled="finalAttendanceCount <= 1">-</button>
           </th>
 
           <th colspan="3" class="bg-gray-300 border p-2">PERFORMANCE</th>
@@ -1062,8 +1057,8 @@ const section = queryParams.get('section') || ''
 
 // State
 const loading = ref(true)
-const quizCount = ref(5)
-const attendanceCount = ref(10)
+const quizCount = ref(1)
+const attendanceCount = ref(1)
 
 const hpsQuizzes = ref(Array(quizCount.value).fill(0))
 const hpsAttendance = ref(Array(attendanceCount.value).fill(0))

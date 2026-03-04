@@ -147,11 +147,11 @@ class GradeController extends Controller
 
             $quizCount = isset($gradeComponents['quiz'])
                 ? count($gradeComponents['quiz'])
-                : 5;
+                : 1;
 
             $attendanceCount = isset($gradeComponents['attendance'])
                 ? count($gradeComponents['attendance'])
-                : 10;
+                : 1;
 
             $examCount = isset($gradeComponents['exam']) ? count($gradeComponents['exam']) : 0;
             Log::info("Grade Components counts", [
@@ -368,8 +368,8 @@ class GradeController extends Controller
             }
 
             // Determine quiz and attendance count, defaulting if none found
-            $quizCount = isset($gradeComponents['quiz']) ? count($gradeComponents['quiz']) : 5;
-            $attendanceCount = isset($gradeComponents['attendance']) ? count($gradeComponents['attendance']) : 10;
+            $quizCount = isset($gradeComponents['quiz']) ? count($gradeComponents['quiz']) : 1;
+            $attendanceCount = isset($gradeComponents['attendance']) ? count($gradeComponents['attendance']) : 1;
             $examCount = isset($gradeComponents['exam']) ? count($gradeComponents['exam']) : 0;
             Log::info("Grade Components counts", [
                 'quizCount' => $quizCount,
