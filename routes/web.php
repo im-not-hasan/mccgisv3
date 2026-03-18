@@ -65,6 +65,7 @@ Route::get('/students', fn () => Inertia::render('Students'))->name('students')-
 Route::get('/instructors', fn () => Inertia::render('Instructors'))->name('instructors')->middleware('ensure.logged');
 Route::get('/classes', fn () => Inertia::render('Classes'))->name('classes')->middleware('ensure.logged');
 Route::get('/subjects', fn () => Inertia::render('Subjects'))->name('subjects')->middleware('ensure.logged');
+Route::get('/manage-grades', function () {return Inertia::render('ManageGrades');})->name('manage.grades')->middleware('ensure.logged:admin');
 Route::get('/consultation', fn () => Inertia::render('Consultation'))->name('consultation')->middleware('ensure.logged');
 Route::get('/settings', fn () => Inertia::render('Settings'))->name('settings')->middleware('ensure.logged');
 Route::get('/terms', function () {return inertia('Terms');});
@@ -293,6 +294,15 @@ Route::post('/finalgrades/save', [GradeController::class, 'saveFinalGrades'])->n
 // Submit final grades (locked)
 Route::post('/grades/submit', [GradeController::class, 'submitGrades'])->middleware('ensure.logged:teacher');
 
+
+// Grades Management by Admin
+Route::get('/grade-management', [GradeController::class, 'getGradeManagement'])
+    ->middleware('ensure.logged:admin');
+
+Route::post('/grades/unsubmit', [GradeController::class, 'unsubmitGrades'])
+    ->middleware('ensure.logged:admin');
+Route::post('/grades/resubmit', [GradeController::class, 'resubmitGrades'])
+    ->middleware('ensure.logged:admin');
 
 // Autosave
 Route::post('/grades/autosave', [GradeController::class, 'autosave'])

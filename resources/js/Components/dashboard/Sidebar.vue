@@ -120,6 +120,22 @@
           </template>
         </SidebarLink>
 
+        <!-- Manage Grades (Clipboard / List icon) -->
+        <SidebarLink name="Manage Grades" href="/manage-grades">
+          <template #icon>
+            <!-- Clipboard list icon -->
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5h6M9 3h6a2 2 0 012 2v1H7V5a2 2 0 012-2zm-2 6h10M7 13h10M7 17h6"
+              />
+            </svg>
+          </template>
+        </SidebarLink>
+
+        
         <!-- Consultation (Chat / Message) -->
         <SidebarLink name="Consultation" href="/consultation">
           <template #icon>

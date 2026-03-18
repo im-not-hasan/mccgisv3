@@ -993,5 +993,115 @@ public function autosave(Request $request)
 
         return response()->json(['message' => 'Grades successfully submitted!']);
     }
+    
+
+
+    public function getGradeManagement()
+    {
+        // ✅ Get current academic year
+        $activeAY = DB::table('ay')->where('display', 1)->first();
+
+        Log::info('📘 Active Academic Year:', [
+            'activeAY' => $activeAY
+        ]);
+
+        if (!$activeAY) {
+            Log::warning('⚠️ No active academic year found.');
+            return response()->json([]);
+        }
+
+        $data = DB::table('grades')
+            ->join('teacher', 'grades.teacher_id', '=', 'teacher.id')
+            ->join('subject', 'grades.subject_id', '=', 'subject.id')
+            ->where('grades.ay_id', $activeAY->id)
+
+            ->select(
+                'grades.teacher_id',
+                'grades.subject_id',
+                'grades.course',
+                'grades.year',
+                'grades.section',
+                'grades.ay_id',
+
+                DB::raw("CONCAT(teacher.fname, ' ', teacher.lname) as instructor"),
+                'subject.title as subject',
+
+                DB::raw('MAX(grades.submitted) as submitted'),
+                DB::raw('MAX(grades.updated_at) as last_updated')
+            )
+
+            ->groupBy(
+                'grades.teacher_id',
+                'grades.subject_id',
+                'grades.course',
+                'grades.year',
+                'grades.section',
+                'grades.ay_id',
+                'teacher.fname',
+                'teacher.lname',
+                'subject.title'
+            )
+
+            ->orderBy('grades.year')
+            ->orderBy('grades.section')
+
+            ->get();
+
+        // // ✅ LOG RAW RESULT COUNT
+        // Log::info('📊 Grade Management Records Count:', [
+        //     'count' => $data->count()
+        // ]);
+
+        // // ✅ LOG FULL DATA (IMPORTANT)
+        // Log::info('📦 Grade Management Data:', [
+        //     'data' => $data
+        // ]);
+
+        // // ✅ OPTIONAL: log first row only (cleaner view)
+        // if ($data->count() > 0) {
+        //     Log::info('🔍 Sample Row:', [
+        //         'first' => $data->first()
+        //     ]);
+        // }
+
+        return response()->json($data);
+    }
+
+    public function unsubmitGrades(Request $request)
+    {
+        DB::table('grades')
+            ->where('teacher_id', $request->teacher_id)
+            ->where('subject_id', $request->subject_id)
+            ->where('course', $request->course)
+            ->where('year', $request->year)
+            ->where('section', $request->section)
+            ->where('ay_id', $request->ay_id)
+            ->update([
+                'submitted' => 0
+            ]);
+
+        return response()->json([
+            'message' => 'Grades unsubmitted successfully'
+        ]);
+    }
+
+
+    public function resubmitGrades(Request $request)
+    {
+        DB::table('grades')
+            ->where('teacher_id', $request->teacher_id)
+            ->where('subject_id', $request->subject_id)
+            ->where('course', $request->course)
+            ->where('year', $request->year)
+            ->where('section', $request->section)
+            ->where('ay_id', $request->ay_id)
+            ->update([
+                'submitted' => 1
+            ]);
+
+        return response()->json([
+            'message' => 'Grades resubmitted successfully'
+        ]);
+    }
 
 }
