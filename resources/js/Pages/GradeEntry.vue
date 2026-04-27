@@ -15,7 +15,7 @@
       <div class="flex items-center gap-2 relative">
         <!-- SAVE DROPDOWN -->
          
-        <div class="flex items-center gap-2 relative" ref="toolbarRef">
+        <div class="flex items-center gap-2 relative select-none" ref="toolbarRef">
           <div
             v-if="autosaveStatus !== 'idle'"
             class="flex items-center gap-2 px-3 py-1 rounded shadow text-sm transition"
@@ -47,25 +47,29 @@
 
             <div
               v-if="showSaveMenu"
-              class="absolute right-0 mt-1 w-36 bg-white border shadow z-50"
+              class="absolute right-0 mt-1 w-36 bg-white border shadow z-50" 
             >
               <button
-                class="dropdown-item"
+                class="dropdown-item select-none"
                 @click="saveGrades"
+                :disabled="savingMidterm"
+                :class="savingMidterm ? 'opacity-50 cursor-not-allowed pointer-events-none select-none' : 'hover:bg-gray-100 cursor-pointer'"
               >
-                Save Midterm
+                {{ savingMidterm ? 'Saving...' : 'Save Midterm' }}
               </button>
               <button
-                class="dropdown-item"
+                class="dropdown-item select-none"
                 @click="saveFinalGrades"
+                :disabled="savingFinals"
+                :class="savingFinals ? 'opacity-50 cursor-not-allowed pointer-events-none select-none' : 'hover:bg-gray-100 cursor-pointer'"
               >
-                Save Finals
+                {{ savingFinals ? 'Saving...' : 'Save Finals' }}
               </button>
             </div>
           </div>
 
           <!-- SUBMIT DROPDOWN -->
-          <div class="relative">
+          <div class="relative select-none">
             <button @click="toggleSubmitMenu" class="excel-btn flex items-center gap-1">
               Submit <span class="text-xs">▼</span>
             </button>
@@ -75,16 +79,20 @@
               class="absolute right-0 mt-1 w-40 bg-white border shadow z-50"
             >
               <button
-                class="dropdown-item"
+                class="dropdown-item select-none"
                 @click="submitMidterm"
+                :disabled="submittingMidterm"
+                :class="submittingMidterm ? 'opacity-50 cursor-not-allowed pointer-events-none select-none' : 'hover:bg-gray-100 cursor-pointer'"
               >
-                Submit Midterm
+                {{submittingMidterm ? 'Submitting...' : 'Submit Midterm' }}
               </button>
               <button
-                class="dropdown-item"
+                class="dropdown-item select-none"
                 @click="submitGrades"
+                :disabled="submittingFinals"
+                :class="submittingFinals ? 'opacity-50 cursor-not-allowed pointer-events-none select-none' : 'hover:bg-gray-100 cursor-pointer'"
               >
-                Submit Finals
+                {{ submittingFinals ? 'Submitting...' : 'Submit Finals' }}
               </button>
             </div>
           </div>
@@ -99,7 +107,7 @@
               'bg-gray-300 text-black': activeTab === 'midterm',
               'bg-gray-100 text-black hover:bg-gray-200 ': activeTab !== 'midterm'
             }"
-          class="px-3 py-1 border text-md"
+          class="px-3 py-1 border text-md select-none"
         >
           Midterm
         </button>
@@ -110,14 +118,14 @@
               'bg-gray-300 text-black': activeTab === 'finals',
               'bg-gray-100 text-black hover:bg-gray-200 ': activeTab !== 'finals'
             }"
-          class="px-3 py-1 border text-md"
+          class="px-3 py-1 border text-md select-none"
         >
           Finals
         </button>
 
         <!-- HELP -->
         <button
-          class="excel-icon-btn border-gray-300"
+          class="excel-icon-btn border-gray-300 select-none"
           title="Help"
           @click="openHelpModal"
         >
@@ -126,7 +134,7 @@
 
         <!-- FULLSCREEN -->
         <button
-          class="excel-icon-btn border-gray-300"
+          class="excel-icon-btn border-gray-300 select-none"
           title="Fullscreen"
           @click="toggleFullscreen"
         >
@@ -153,7 +161,7 @@
               <button
                 v-if="!isSubmitted"
                 @click="addQuizColumn"
-                class="ml-2 bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-xs"
+                class="ml-2 bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-xs select-none"
                 title="Add Quiz Column"
               >
                 +
@@ -161,7 +169,7 @@
               <button
                 v-if="!isSubmitted"
                 @click="removeQuizColumn"
-                class="ml-1 bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs"
+                class="ml-1 bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs select-none"
                 title="Remove Quiz Column"
                 :disabled="quizCount <= 1"
               >
@@ -175,7 +183,7 @@
               <button
                 v-if="!isSubmitted"
                 @click="addAttendanceColumn"
-                class="ml-2 bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-xs"
+                class="ml-2 bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-xs select-none"
                 title="Add Attendance Column"
               >
                 +
@@ -183,7 +191,7 @@
               <button
                 v-if="!isSubmitted"
                 @click="removeAttendanceColumn"
-                class="ml-1 bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs"
+                class="ml-1 bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs select-none"
                 title="Remove Attendance Column"
                 :disabled="attendanceCount <= 1"
               >
@@ -535,14 +543,27 @@
               {{ student.equivalent.toFixed(1) }}
             </td>
             <td
-              class="border p-1 text-center font-semibold"
-              :class="{
-                'text-green-700 bg-green-100': student.remarks === 'Passed',
-                'text-red-700 bg-red-100': student.remarks === 'Failed'
-              }"
+            class="border p-1 text-center font-semibold"
+            :class="{
+              'text-green-700 bg-green-100': student.midtermGrade >= 75 && student.remarksOverride !== 'Dropped' && student.remarksOverride !== 'Incomplete',
+              'text-red-700 bg-red-100': student.midtermGrade < 75 || student.remarksOverride === 'Dropped' || student.remarksOverride === 'Incomplete'
+            }"
+          >
+            <select
+              v-if="student.midtermGrade < 75 || student.remarksOverride === 'Dropped' || student.remarksOverride === 'Incomplete'"
+              v-model="remarksMap[student.studid]"
+              @change="syncRemarksOverride(student.studid, student.remarksOverride)"
+              class="bg-transparent border-none text-center text-red-700 font-semibold text-xs focus:outline-none"
             >
-              {{ student.remarks }}
-            </td>
+              <option value="Failed">Failed</option>
+              <option value="Dropped">Dropped</option>
+              <option value="Incomplete">Incomplete</option>
+            </select>
+
+            <span v-else>
+              Passed
+            </span>
+          </td>
           </tr>
         </tbody>
       </table>
@@ -579,12 +600,12 @@
 
         <!-- Column Labels -->
         <tr>
-          <th v-for="n in finalQuizCount" :key="'fq-label-'+n" class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">Q{{ n }}</th>
+          <th v-for="n in finalQuizCount" :key="'fq-label-'+n" class="border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">Q{{ n }}</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">TOTAL</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">30%</th>
 
-          <th v-for="n in finalAttendanceCount" :key="'fa-label-'+n" class="bg-blue-200 border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">A{{ n }}</th>
+          <th v-for="n in finalAttendanceCount" :key="'fa-label-'+n" class="border p-1 text-center sticky top-0 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">A{{ n }}</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">TOTAL</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">EQUIV</th>
           <th class="bg-gray-300 border p-1 text-center sticky top-0 z-30">15%</th>
@@ -609,7 +630,7 @@
 
         <!-- HPS Row -->
         <tr>
-          <td v-for="(hps, i) in hpsFinalQuizzes" :key="'fhps-quiz-'+i" class="border p-1 bg-orange-200 sticky top-8 z-30"  :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
+          <td v-for="(hps, i) in hpsFinalQuizzes" :key="'fhps-quiz-'+i" class="border p-1 sticky top-8 z-30"  :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
             <input v-model.number="hpsFinalQuizzes[i]" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" :disabled="isSubmitted"
                 :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-orange-200': !isSubmitted }"/>
           </td>
@@ -617,7 +638,7 @@
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">30</td>
 
-          <td v-for="(hps, i) in hpsFinalAttendance" :key="'fhps-att-'+i" class="border p-1 bg-orange-200 sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
+          <td v-for="(hps, i) in hpsFinalAttendance" :key="'fhps-att-'+i" class="border p-1 sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
             <input v-model.number="hpsFinalAttendance[i]" type="number" min="0" class="w-12 border px-1 text-center bg-blue-200 score-input" :disabled="isSubmitted"
                 :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-orange-200': !isSubmitted }"/>
           </td>
@@ -625,15 +646,15 @@
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">15</td>
 
-          <td class="border p-1 bg-orange-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
-            <input v-model.number="hpsFinalPerformance" type="number" min="0" class="w-12 border px-1 text-center bg-orange-200 score-input" :disabled="isSubmitted"
+          <td class="border p-1 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
+            <input v-model.number="hpsFinalPerformance" type="number" min="0" class="w-12 border px-1 text-center score-input" :disabled="isSubmitted"
                 :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-orange-200': !isSubmitted }"/>
           </td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">15</td>
 
-          <td class="border p-1 bg-orange-200 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
-            <input v-model.number="hpsFinalExam" type="number" min="0" class="w-12 border px-1 text-center bg-orange-200 score-input" :disabled="isSubmitted"
+          <td class="border p-1 text-center sticky top-8 z-30" :class="{ 'bg-gray-300': isSubmitted, 'bg-orange-200': !isSubmitted }">
+            <input v-model.number="hpsFinalExam" type="number" min="0" class="w-12 border px-1 text-center score-input" :disabled="isSubmitted"
                 :class="{ 'bg-gray-300 cursor-not-allowed border-none focus:border-none': isSubmitted, 'bg-orange-200': !isSubmitted }"/>
           </td>
           <td class="border p-1 bg-gray-300 text-center sticky top-8 z-30">100</td>
@@ -656,7 +677,7 @@
           <td class="border-none p-1 sticky left-40 bg-white z-40 w-36">{{ student.mname }}</td>
 
           <!-- Quizzes -->
-          <td v-for="(score, i) in student.quizzes" :key="'fquiz-'+index+'-'+i" class="border p-1 bg-orange-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
+          <td v-for="(score, i) in student.quizzes" :key="'fquiz-'+index+'-'+i" class="border p-1 " :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
             <input
               v-model.number="student.quizzes[i]"
               type="number"
@@ -685,7 +706,7 @@
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.quiz.toFixed(0) }}</td>
 
           <!-- Attendance -->
-          <td v-for="(score, i) in student.attendance" :key="'fatt-'+index+'-'+i" class="border p-1 bg-orange-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
+          <td v-for="(score, i) in student.attendance" :key="'fatt-'+index+'-'+i" class="border p-1 " :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
             <input
               v-model.number="student.attendance[i]"
               type="number"
@@ -714,7 +735,7 @@
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.attendance.toFixed(0) }}</td>
 
           <!-- Performance -->
-          <td class="border p-1 text-center bg-orange-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
+          <td class="border p-1 text-center " :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
             <input
               v-model.number="student.performance"
               type="number"
@@ -742,7 +763,7 @@
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.percents.performance.toFixed(0) }}</td>
 
           <!-- Final Exam -->
-          <td class="border p-1 text-center bg-orange-100" :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
+          <td class="border p-1 text-center " :class="{ 'bg-gray-200': isSubmitted, 'bg-orange-100': !isSubmitted }">
             <input
               v-model.number="student.finalExam"
               type="number"
@@ -772,25 +793,55 @@
           <!-- Final Summary -->
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.finalGrade.toFixed(0) }}</td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ student.equivalent.toFixed(1) }}</td>
-          <td class="border p-1 text-center font-semibold bg-gray-200"
-              :class="{
-                'text-green-700 bg-green-100': student.remarks === 'Passed',
-                'text-red-700 bg-red-100': student.remarks === 'Failed'
-              }">
-            {{ student.remarks }}
-          </td>
+          <td
+  class="border p-1 text-center font-semibold"
+  :class="{
+    'text-green-700 bg-green-100': student.finalGrade >= 75 && student.remarksOverride !== 'Dropped' && student.remarksOverride !== 'Incomplete',
+    'text-red-700 bg-red-100': student.finalGrade < 75 || student.remarksOverride === 'Dropped' || student.remarksOverride === 'Incomplete'
+  }"
+>
+  <select
+    v-if="student.finalGrade < 75 || student.remarksOverride === 'Dropped' || student.remarksOverride === 'Incomplete'"
+    v-model="remarksMap[student.studid]"
+    @change="syncRemarksOverride(student.studid, student.remarksOverride)"
+    class="bg-transparent border-none text-center text-red-700 font-semibold text-xs focus:outline-none"
+  >
+    <option value="Failed">Failed</option>
+    <option value="Dropped">Dropped</option>
+    <option value="Incomplete">Incomplete</option>
+  </select>
+
+  <span v-else>
+    Passed
+  </span>
+</td>
 
           <!-- Midterm Reference -->
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ getMidtermGrade(student.studid).toFixed(0) }}</td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ (((getMidtermGrade(student.studid) * 0.3) + (student.finalGrade * 0.7))).toFixed(0) }}</td>
           <td class="border p-1 text-center font-semibold bg-gray-200">{{ ((gradeEquivalent(getMidtermGrade(student.studid)) * 0.3) + (gradeEquivalent(student.finalGrade) * 0.7)).toFixed(1) }}</td>
-          <td class="border p-1 text-center font-semibold bg-gray-200"
-              :class="{
-                'text-green-700 bg-green-100': (((getMidtermGrade(student.studid) * 0.3) + (student.finalGrade * 0.7))) >= 75,
-                'text-red-700 bg-red-100': (((getMidtermGrade(student.studid) * 0.3) + (student.finalGrade * 0.7))) < 75
-              }">
-            {{ (((getMidtermGrade(student.studid) * 0.3) + (student.finalGrade * 0.7))) >= 75 ? 'Passed' : 'Failed' }}
-          </td>
+          <td
+  class="border p-1 text-center font-semibold bg-gray-200"
+  :class="{
+    'text-green-700 bg-green-100': getOverallGrade(student) >= 75 && student.remarksOverride !== 'Dropped' && student.remarksOverride !== 'Incomplete',
+    'text-red-700 bg-red-100': getOverallGrade(student) < 75 || student.remarksOverride === 'Dropped' || student.remarksOverride === 'Incomplete'
+  }"
+>
+  <select
+    v-if="getOverallGrade(student) < 75 || student.remarksOverride === 'Dropped' || student.remarksOverride === 'Incomplete'"
+    v-model="remarksMap[student.studid]"
+    @change="syncRemarksOverride(student.studid, student.remarksOverride)"
+    class="bg-transparent border-none text-center text-red-700 font-semibold text-xs focus:outline-none"
+  >
+    <option value="Failed">Failed</option>
+    <option value="Dropped">Dropped</option>
+    <option value="Incomplete">Incomplete</option>
+  </select>
+
+  <span v-else>
+    Passed
+  </span>
+</td>
         </tr>
       </tbody>
     </table>
@@ -842,6 +893,10 @@ import { ref, computed, onMounted, watch, onBeforeUnmount, reactive } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 import axios from 'axios'
+const savingMidterm = ref(false)
+const savingFinals = ref(false)
+const submittingMidterm = ref(false)
+const submittingFinals = ref(false)
 const activeTab = ref('midterm') // default active tab
 const isSubmitted = ref(false)
 const autosaveEnabled = ref(false)
@@ -856,6 +911,8 @@ const structureDirty = reactive({
 
 const autosaveStatus = ref('idle')  // 'idle' | 'saving' | 'saved' | 'error'
 const hasShownSaveHint = ref(false)
+const remarksMap = reactive({})
+// key: student_id → value: 'Failed' | 'Dropped' | 'Incomplete'
 
 const autosaveBuffer = ref(new Map())
 // key: `${term}-${student_id}-${component_type}-${component_index}`
@@ -870,6 +927,7 @@ const closeMenus = () => {
   showSaveMenu.value = false
   showSubmitMenu.value = false
 }
+
 
 const handleClickOutside = (e) => {
   if (!toolbarRef.value) return
@@ -1493,7 +1551,14 @@ const fetchGrades = async () => {
       }
       // summaryGrades is an object keyed by student_id
       const summary = data.summaryGrades?.[s.studid] || {}
-
+      const dbRemarkRaw = data.remarksData?.[s.studid] ?? null
+      const dbRemark = dbRemarkRaw && dbRemarkRaw.trim() !== ''
+        ? dbRemarkRaw.trim()
+        : null
+      remarksMap[s.studid] =
+      dbRemark === 'Dropped' || dbRemark === 'Incomplete'
+        ? dbRemark
+        : 'Failed'
       // Ensure quizzes and attendance arrays are the correct length, fill missing with ''
       const quizzes = Array(quizCount.value)
         .fill('')
@@ -1602,7 +1667,7 @@ const fetchFinalGrades = async () => {
       const attendance = Array(finalAttendanceCount.value)
         .fill('')
         .map((_, i) => (scores.attendance?.[i] ?? ''))
-
+      const existingRemark = remarksMap[s.studid]
       return {
         ...s,
         quizzes,
@@ -1616,7 +1681,11 @@ const fetchFinalGrades = async () => {
         percents: { quiz: 0, attendance: 0, performance: 0, exam: 0 },
         finalGrade: 0,
         equivalent: 0,
-        remarks: 'Failed',
+        remarks: '',
+        remarksOverride:
+        existingRemark === 'Dropped' || existingRemark === 'Incomplete'
+          ? existingRemark
+          : 'Failed',
       }
     })
   } catch (err) {
@@ -1633,7 +1702,9 @@ watch(activeTab, () => {
   autosaveStatus.value = 'idle'
 })
 
-
+const getOverallGrade = (student) => {
+  return (getMidtermGrade(student.studid) * 0.3) + (student.finalGrade * 0.7)
+}
 
 
 
@@ -1734,7 +1805,11 @@ const calculateGrades = () => {
     student.equivalent = Number(gradeEquivalent(student.midtermGrade).toFixed(1))
 
     // REMARKS
-    student.remarks = student.midtermGrade >= 75 ? 'Passed' : 'Failed'
+    if (student.remarksOverride === 'Dropped' || student.remarksOverride === 'Incomplete') {
+      student.remarks = student.remarksOverride
+    } else {
+      student.remarks = student.midtermGrade >= 75 ? 'Passed' : 'Failed'
+    }
 
   })
 }
@@ -1780,7 +1855,11 @@ const calculateFinalGrades = () => {
 
     // EQUIVALENT & REMARKS
     student.equivalent = Number(gradeEquivalent(student.finalGrade).toFixed(1))
-    student.remarks = student.finalGrade >= 75 ? 'Passed' : 'Failed'
+    if (student.remarksOverride === 'Dropped' || student.remarksOverride === 'Incomplete') {
+      student.remarks = student.remarksOverride
+    } else {
+      student.remarks = student.finalGrade >= 75 ? 'Passed' : 'Failed'
+    }
   })
 }
 
@@ -1827,6 +1906,7 @@ watch(
 
 
 const submitGrades = async () => {
+  if (submittingFinals.value) return
   if (hasMidtermScoresExceedingHps() || hasFinalScoresExceedingHps()) {
     await Swal.fire({
       icon: 'error',
@@ -1859,7 +1939,7 @@ const submitGrades = async () => {
   });
 
   if (!result.isConfirmed) return;
-
+  submittingFinals.value = true
   try {
     await axios.post(`/grades/submit`, {
       teacher_username: username.value,
@@ -1886,6 +1966,7 @@ const submitGrades = async () => {
     });
   } finally {
     loading.value = false;
+    submittingFinals.value = false
   }
 };
 
@@ -1905,6 +1986,8 @@ const submitGrades = async () => {
 
 // Save grades to backend
 const saveGrades = async () => {
+  if (savingMidterm.value) return // ⛔ prevent spam
+
   if (hasMidtermScoresExceedingHps()) {
     await Swal.fire({
       icon: 'error',
@@ -1919,6 +2002,7 @@ const saveGrades = async () => {
     })
     return
   }
+  savingMidterm.value = true
   try {
     // Prepare gradeComponents array from your current HPS states
     const gradeComponents = [];
@@ -2013,6 +2097,11 @@ const saveGrades = async () => {
     const gradesSummary = students.value.map(student => ({
       student_id: student.studid,
       midterm: Number(student.equivalent) || 0,
+      remarks:
+      remarksMap[student.studid] === 'Dropped' ||
+      remarksMap[student.studid] === 'Incomplete'
+        ? remarksMap[student.studid]
+        : null
     }));
 
     // Send payload to backend
@@ -2038,7 +2127,7 @@ const saveGrades = async () => {
     })
     hasComponents.midterm = true
     structureDirty.midterm = false
-
+  
   } catch (error) {
     console.error('Failed to save grades:', error);
     Swal.fire({
@@ -2047,10 +2136,14 @@ const saveGrades = async () => {
       text: 'There was an error saving midterm grades. Please try again.',
       confirmButtonColor: '#ef4444',
     })
+   
+  } finally {
+    savingMidterm.value = false
   }
 };
 
 const saveFinalGrades = async () => {
+  if (savingFinals.value) return
   if (hasFinalScoresExceedingHps()) {
     await Swal.fire({
       icon: 'error',
@@ -2065,6 +2158,7 @@ const saveFinalGrades = async () => {
     })
     return
   }
+  savingFinals.value = true
   try {
     const gradeComponents = []
 
@@ -2118,7 +2212,12 @@ const saveFinalGrades = async () => {
       return {
         student_id: s.studid,
         final: finalGrade,
-        overall, 
+        overall,
+        remarks:
+        remarksMap[s.studid] === 'Dropped' ||
+        remarksMap[s.studid] === 'Incomplete'
+          ? remarksMap[s.studid]
+          : null
       }
     })
 
@@ -2153,6 +2252,9 @@ const saveFinalGrades = async () => {
       text: 'There was an error saving final grades. Please try again.',
       confirmButtonColor: '#ef4444',
     })
+  }
+  finally {
+    savingFinals.value = false
   }
 }
 

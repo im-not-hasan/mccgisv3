@@ -179,9 +179,9 @@
           <td class="border-[1px] border-black">{{ student.gender === 'Spacer' ? '' : subject?.units }}</td>
 
           <!-- REMARKS -->
-          <td class="border-[1px] border-black" :class="remarkClass(student.midterm)">{{ passFailLabel(student.midterm) }}</td>
-          <td class="border-[1px] border-black" :class="remarkClass(student.final)">{{ passFailLabel(student.final) }}</td>
-          <td class="border-[1px] border-black" :class="remarkClass(student.overall)">{{ passFailLabel(student.overall) }}</td>
+          <td class="border-[1px] border-black" :class="remarkClass(student.midterm, student)">{{ getRemarkDisplay(student, student.midterm) }}</td>
+          <td class="border-[1px] border-black" :class="remarkClass(student.final, student)">{{ getRemarkDisplay(student, student.final) }}</td>
+          <td class="border-[1px] border-black" :class="remarkClass(student.overall, student)">{{ getRemarkDisplay(student, student.overall) }}</td>
         </tr>
       </tbody>
       <tfoot>
@@ -224,7 +224,7 @@
 
               <div class="mb-2">
                 <div class="mb-1 text-center mt-[-2px]">Certified Correct:</div>
-                <div class="text-center font-bold underline mt-2">ROBERTO CARATAO</div>
+                <div class="text-center font-bold underline mt-2">ROBERTO S. CARATAO JR.</div>
                 <div class="text-center mt-[-2px]">Registrar</div>
               </div>
 
@@ -294,7 +294,7 @@
 
               <div class="mb-2">
                 <div class="mb-1 text-center mt-[-2px]">Certified Correct:</div>
-                <div class="text-center font-bold underline mt-2">ROBERTO CARATAO</div>
+                <div class="text-center font-bold underline mt-2">ROBERTO S. CARATAO JR.</div>
                 <div class="text-center mt-[-2px]">Registrar</div>
               </div>
 
@@ -380,15 +380,32 @@ const isFailed = (v) => {
   return n > 3.0; // FAIL if > 3.0
 };
 
+const getRemarkDisplay = (student, value) => {
+  const remark = student.remarks?.trim()
+
+  // 🔴 Force override
+  if (remark === 'Dropped') return 'DROPPED'
+  if (remark === 'Incomplete') return 'INC'
+
+  // 🟢 Otherwise → computed
+  return passFailLabel(value)
+}
+
 const passFailLabel = (v) => {
   const failed = isFailed(v);
   if (failed == null) return ' ';      // show blank when no data
   return failed ? 'FAILED' : 'PASSED';
 };
 
-const remarkClass = (v) => {
-  const failed = isFailed(v);
-  return failed ? 'text-red-700 bg-red-100' : ''; // PASSED = no special color
-};
+const remarkClass = (v, student) => {
+  const remark = student?.remarks?.trim()
+
+  if (remark === 'Dropped' || remark === 'Incomplete') {
+    return 'text-red-700 bg-red-100'
+  }
+
+  const failed = isFailed(v)
+  return failed ? 'text-red-700 bg-red-100' : ''
+}
 
 </script>

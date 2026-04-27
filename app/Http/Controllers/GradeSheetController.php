@@ -63,6 +63,7 @@ class GradeSheetController extends Controller
             ->where('grades.teacher_id', $teacher_id)
             ->select(
                 'grades.*',
+                'grades.remarks', // 👈 ADD THIS (explicit is safer)
                 'student.gender',
                 // include whichever student columns you still want:
                 // formatted display name: LNAME, FNAME M.

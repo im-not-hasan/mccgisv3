@@ -65,13 +65,24 @@ class GradeController extends Controller
                     ['lname', 'asc'],
                 ])
                 ->values();
-
+            
             // Log::info("Students fetched", [
             //     'count' => $students->count(),
             // ]);
             $active_curriculum = DB::table('curriculums')->where('display',1)->first();
             $subject = DB::table('subject')->where('code', $subject_id)->where('curriculum',$active_curriculum->curriculum)->first();
+            if (!$subject) {
+                return response()->json(['error' => 'Subject not found'], 404);
+            }
             $subjectid = $subject->id;
+            $remarksMap = DB::table('grades')
+                ->where('subject_id', $subjectid)
+                ->where('teacher_id', $teacher_id)
+                ->where('course', $course)
+                ->where('year', $year)
+                ->where('section', $section)
+                ->where('ay_id', $ay_id)
+                ->pluck('remarks', 'student_id');
             $hasComponents = DB::table('grade_components')
                 ->where('subject_id', $subjectid)
                 ->where('teacher_id', $teacher_id)
@@ -266,7 +277,26 @@ class GradeController extends Controller
                     $gradesData[$studId]['performance'] = '';
                 }
             }
+            $remarksData = [];
 
+            foreach ($remarksMap as $studentDbId => $remark) {
+                if (isset($studentIdMap[$studentDbId])) {
+                    $studId = $studentIdMap[$studentDbId];
+                    $remarksData[$studId] = $remark;
+                }
+            }
+            // ✅ DEBUG: Log student names with remarks
+            // foreach ($students as $student) {
+            //     $studId = $student->studid;
+
+            //     $remark = $remarksData[$studId] ?? 'NULL';
+
+            //     Log::info('Student Remark Debug', [
+            //         'student_id' => $studId,
+            //         'name' => $student->lname . ', ' . $student->fname,
+            //         'remark' => $remark,
+            //     ]);
+            // }
             // Log::info('Processed Grades Data:', ['gradesData' => $gradesData]);
 
             // Log::info('Processed Grades Data JSON:', ['gradesData' => json_encode($gradesData)]);
@@ -280,6 +310,7 @@ class GradeController extends Controller
                 'term' => "midterm",
                 'submitted' => $isSubmitted ? 1 : 0, // ✅ return as integer
                 'hasComponents' => $hasComponents,
+                'remarksData' => $remarksData,
             ]);
         } catch (\Exception $e) {
             Log::error("Error in getGrades(): " . $e->getMessage());
@@ -643,6 +674,7 @@ class GradeController extends Controller
         foreach ($gradesSummary as $summary) {
             $studentId = $summary['student_id'];
             $midterm = $summary['midterm'];
+            $remarks = $summary['remarks'] ?? null;
             $student = DB::table('student')->where('studid', $studentId)->first();
             if (!$student) {
                 return response()->json(['error' => 'Student not found'], 404);
@@ -661,6 +693,7 @@ class GradeController extends Controller
             if ($existingGrade) {
                 DB::table('grades')->where('id', $existingGrade->id)->update([
                     'midterm' => $midterm,
+                    'remarks' => $remarks,
                     'updated_at' => now(),
                 ]);
             } else {
@@ -672,6 +705,7 @@ class GradeController extends Controller
                     'year' => $year,
                     'section' => $section,
                     'midterm' => $midterm,
+                    'remarks' => $remarks,
                     'ay_id' => $ayId,
                     'submitted' => 0,
                     'created_at' => now(),
@@ -809,6 +843,7 @@ class GradeController extends Controller
             $studentId = $summary['student_id'];
             $final = $summary['final'];
             $overall = $summary['overall'];
+            $remarks = $summary['remarks'] ?? null;
             $student = DB::table('student')->where('studid', $studentId)->first();
             if (!$student) {
                 return response()->json(['error' => 'Student not found'], 404);
@@ -828,6 +863,7 @@ class GradeController extends Controller
                 DB::table('grades')->where('id', $existingGrade->id)->update([
                     'final' => $final,
                     'overall' => $overall,
+                    'remarks' => $remarks,
                     'updated_at' => now(),
                 ]);
             } else {
@@ -840,6 +876,7 @@ class GradeController extends Controller
                     'section' => $section,
                     'final' => $final,
                     'overall' => $overall,
+                    'remarks' => $remarks,
                     'ay_id' => $ayId,
                     'submitted' => 0,
                     'created_at' => now(),
